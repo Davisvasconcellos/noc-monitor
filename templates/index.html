@@ -59,71 +59,53 @@
     .brand-title { font-size: 17px; font-weight: 700; letter-spacing: -0.3px; }
     .brand-subtitle { font-size: 11px; color: var(--text-muted); }
 
-    .counters-bar { display: flex; align-items: center; gap: 10px; }
+    .counters-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
     .stat-chip {
       background: #172033;
       border: 1px solid var(--border);
       border-radius: 8px;
-      padding: 6px 14px;
+      padding: 6px 12px;
       display: flex;
       align-items: center;
-      gap: 8px;
-      font-size: 13px;
+      gap: 7px;
+      font-size: 12px;
       font-weight: 600;
     }
 
-    .stat-chip .dot { width: 9px; height: 9px; border-radius: 50%; }
+    .stat-chip .dot { width: 8px; height: 8px; border-radius: 50%; }
     .stat-chip.total .dot { background: var(--accent); }
     .stat-chip.online .dot { background: var(--online); box-shadow: 0 0 8px var(--online); }
     .stat-chip.offline .dot { background: var(--offline); box-shadow: 0 0 8px var(--offline); }
 
-    /* Controls Bar */
-    .controls-container {
-      max-width: 1400px;
-      width: 100%;
-      margin: 0 auto;
-      padding: 18px 28px 0;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 16px;
+    /* Chips Interativos (Filtros de 1 Clique no Topo) */
+    .stat-chip.interactive {
+      cursor: pointer;
+      user-select: none;
+      transition: all 0.18s ease;
+    }
+    .stat-chip.interactive:hover {
+      transform: translateY(-1px);
+      border-color: #3b82f6;
+      background: #1d283f;
+    }
+    .stat-chip.interactive.chip-active {
+      border-color: #3b82f6;
+      background: rgba(59, 130, 246, 0.2);
+      box-shadow: 0 0 12px rgba(59, 130, 246, 0.35);
+    }
+    .stat-chip.online.chip-active {
+      border-color: #10b981;
+      background: rgba(16, 185, 129, 0.18);
+      box-shadow: 0 0 12px rgba(16, 185, 129, 0.35);
+    }
+    .stat-chip.offline.chip-active {
+      border-color: #ef4444;
+      background: rgba(239, 68, 68, 0.18);
+      box-shadow: 0 0 12px rgba(239, 68, 68, 0.35);
     }
 
-    .interval-box {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      padding: 6px 12px;
-      border-radius: 10px;
-    }
-
-    .timer-badge {
-      background: rgba(59, 130, 246, 0.15);
-      color: #60a5fa;
-      border: 1px solid rgba(59, 130, 246, 0.3);
-      padding: 4px 10px;
-      border-radius: 20px;
-      font-size: 11px;
-      font-weight: 600;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-    }
-
-    .timer-badge .pulse-ring {
-      width: 7px; height: 7px; background: #60a5fa; border-radius: 50%; animation: pulse 1.5s infinite;
-    }
-
-    @keyframes pulse {
-      0% { transform: scale(0.95); opacity: 0.8; }
-      50% { transform: scale(1.3); opacity: 1; }
-      100% { transform: scale(0.95); opacity: 0.8; }
-    }
-
-    .filter-tabs {
+    /* Alternador de Visão por Ícones Web-Standard */
+    .view-mode-toggle {
       display: flex;
       background: #090d16;
       padding: 3px;
@@ -131,21 +113,249 @@
       border: 1px solid var(--border);
       gap: 3px;
     }
-
-    .filter-tab {
-      padding: 5px 12px;
+    .view-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 11px;
       font-size: 12px;
-      font-weight: 600;
+      font-weight: 700;
       color: var(--text-muted);
       border-radius: 6px;
       background: transparent;
       border: none;
       cursor: pointer;
+      transition: all 0.15s;
+    }
+    .view-btn:hover { color: #f8fafc; background: rgba(255, 255, 255, 0.05); }
+    .view-btn.active {
+      background: #1e293b;
+      color: #60a5fa;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
     }
 
-    .filter-tab.active { background: #1e293b; color: white; }
+    /* Timer Compacto & Botões Utilitários */
+    .compact-timer {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #0d1424;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 5px 10px;
+    }
+    .compact-timer select {
+      background: transparent;
+      border: none;
+      color: #60a5fa;
+      font-weight: 700;
+      font-size: 12px;
+      cursor: pointer;
+      padding: 0;
+      width: auto;
+    }
+    .compact-timer select:focus { outline: none; }
+    .timer-divider { color: var(--border); font-size: 12px; }
+    .countdown-val {
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 700;
+      color: #94a3b8;
+      min-width: 24px;
+      text-align: center;
+    }
 
-    .btn-group { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+    .btn-icon-square {
+      width: 34px;
+      height: 34px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: #172033;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-main);
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.15s;
+      padding: 0;
+    }
+    .btn-icon-square:hover {
+      background: #202d48;
+      border-color: #3b82f6;
+      color: #60a5fa;
+      transform: translateY(-1px);
+    }
+    .btn-icon-square.active {
+      background: #2563eb;
+      color: white;
+      border-color: #3b82f6;
+    }
+
+    .btn-menu-trigger {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      border: 1px solid #3b82f6;
+      color: #93c5fd;
+      font-weight: 700;
+      font-size: 13px;
+      padding: 7px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-menu-trigger:hover {
+      background: #2563eb;
+      color: white;
+      box-shadow: 0 0 14px rgba(37, 99, 235, 0.45);
+      transform: translateY(-1px);
+    }
+
+    /* Sub-barra: Busca Rápida e Filtros Ativos */
+    .subbar-container {
+      max-width: 1400px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 16px 28px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .search-input-wrap {
+      position: relative;
+      flex: 1;
+      max-width: 440px;
+      min-width: 250px;
+    }
+    .search-input-wrap input {
+      width: 100%;
+      background: #0d1424;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 12px 8px 34px;
+      font-size: 13px;
+      color: var(--text-main);
+      transition: border-color 0.2s;
+    }
+    .search-input-wrap input:focus {
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+    }
+    .search-icon-pos {
+      position: absolute;
+      left: 11px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 13px;
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+    .active-filter-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 10px;
+      background: #172033;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .active-filter-badge b { color: #60a5fa; }
+    .btn-clear-filter {
+      background: transparent;
+      border: none;
+      color: #ef4444;
+      cursor: pointer;
+      font-size: 11px;
+      padding: 2px 5px;
+      font-weight: 700;
+    }
+
+    /* Gaveta Lateral Retrátil (Offcanvas Drawer) */
+    .drawer-backdrop {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.65);
+      backdrop-filter: blur(4px);
+      z-index: 150;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+    .drawer-backdrop.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .offcanvas-drawer {
+      position: fixed;
+      top: 0; right: 0;
+      width: 380px;
+      max-width: 92vw;
+      height: 100vh;
+      background: #0b1120;
+      border-left: 1px solid var(--border);
+      box-shadow: -10px 0 40px rgba(0, 0, 0, 0.7);
+      z-index: 160;
+      display: flex;
+      flex-direction: column;
+      transform: translateX(100%);
+      transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .offcanvas-drawer.open {
+      transform: translateX(0);
+    }
+    .drawer-header {
+      padding: 18px 22px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #0f172a;
+    }
+    .drawer-title { font-size: 16px; font-weight: 700; color: white; display: flex; align-items: center; gap: 8px; }
+    .drawer-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .drawer-section {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .drawer-section-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--text-muted);
+      margin-bottom: 2px;
+    }
+    .drawer-card {
+      background: #111a2e;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+    }
+    .drawer-btn {
+      width: 100%;
+      justify-content: flex-start;
+      padding: 10px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
 
     button {
       cursor: pointer;
@@ -163,6 +373,7 @@
     .btn-primary { background: var(--accent); color: white; }
     .btn-primary:hover { background: var(--accent-hover); }
     .btn-secondary { background: #1e293b; color: var(--text-main); border: 1px solid var(--border); }
+    .btn-secondary:hover { background: #273549; }
     .btn-secondary:hover { background: #273549; }
 
     /* Main Container */
@@ -835,7 +1046,7 @@
 </head>
 <body>
 
-  <!-- Header -->
+  <!-- Header Moderno -->
   <header>
     <div class="brand-area">
       <div class="logo-badge">NOC MONITOR</div>
@@ -845,45 +1056,44 @@
       </div>
     </div>
 
-    <!-- Counters -->
+    <!-- Counters Interativos (Filtros de 1 Clique) -->
     <div class="counters-bar">
-      <div class="stat-chip" style="border-color: rgba(59, 130, 246, 0.4);">
+      <div class="stat-chip interactive chip-active" id="chip-rooms" onclick="setViewMode('rooms')" title="Visualizar por Salas (Modo Cards)">
         <div class="dot" style="background: #60a5fa;"></div>
         <span>Salas: <b id="count-rooms">0</b></span>
       </div>
-      <div class="stat-chip total">
+      <div class="stat-chip interactive total chip-active" id="chip-total" onclick="setFilter('all')" title="Exibir todos os dispositivos">
         <div class="dot"></div>
-        <span>Dispositivos: <b id="count-total">0</b></span>
+        <span>Total: <b id="count-total">0</b></span>
       </div>
-      <div class="stat-chip online">
+      <div class="stat-chip interactive online" id="chip-online" onclick="setFilter('online')" title="Filtrar somente equipamentos Online">
         <div class="dot"></div>
         <span>Online: <b id="count-online">0</b></span>
       </div>
-      <div class="stat-chip offline">
+      <div class="stat-chip interactive offline" id="chip-offline" onclick="setFilter('offline')" title="Filtrar somente equipamentos Offline">
         <div class="dot"></div>
         <span>Offline: <b id="count-offline">0</b></span>
       </div>
     </div>
-  </header>
 
-  <!-- Controls -->
-  <div class="controls-container">
-    <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
-      
-      <!-- Alternador de Visão (Salas vs Todos) -->
-      <div class="view-toggle-group">
-        <button class="view-toggle-btn active" id="btn-view-rooms" onclick="setViewMode('rooms')">
-          🏢 Visão por Salas
+    <!-- Utilitários e Ações de Topo -->
+    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+      <!-- Alternador de Visão por Ícones Web-Standard -->
+      <div class="view-mode-toggle">
+        <button class="view-btn active" id="btn-view-rooms" onclick="setViewMode('rooms')" title="Visualização em Blocos (Por Salas)">
+          <span style="font-size: 14px;">⊞</span>
+          <span class="view-label">Salas</span>
         </button>
-        <button class="view-toggle-btn" id="btn-view-all" onclick="setViewMode('all')">
-          📑 Todos os Dispositivos
+        <button class="view-btn" id="btn-view-all" onclick="setViewMode('all')" title="Visualização em Lista Geral de Equipamentos">
+          <span style="font-size: 14px;">☰</span>
+          <span class="view-label">Lista</span>
         </button>
       </div>
 
-      <!-- Intervalo & Contador -->
-      <div class="interval-box">
-        <label for="interval-select" style="font-size: 12px; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; gap: 4px;">⏱️ Intervalo:</label>
-        <select id="interval-select" onchange="changeInterval(this.value)" style="width: auto; padding: 4px 8px; font-size: 12px; font-weight: 700; color: #60a5fa; background: #0f172a; border: 1px solid var(--border); border-radius: 6px; cursor: pointer;">
+      <!-- Timer Compacto Autoexplicativo -->
+      <div class="compact-timer" title="Intervalo e tempo restante para próxima checagem">
+        <span style="font-size: 12px;">⏱️</span>
+        <select id="interval-select" onchange="changeInterval(this.value)">
           <option value="15">15s</option>
           <option value="30">30s</option>
           <option value="60">1m</option>
@@ -893,32 +1103,125 @@
           <option value="600">10m</option>
           <option value="900">15m</option>
         </select>
-        <div class="timer-badge" id="countdown-badge">
-          <div class="pulse-ring"></div>
-          <span id="countdown-text">Atualizando em: 15s</span>
-        </div>
+        <span class="timer-divider">|</span>
+        <span id="countdown-val" class="countdown-val">15s</span>
       </div>
 
-      <!-- Filtros -->
-      <div class="filter-tabs">
-        <button class="filter-tab active" onclick="setFilter('all', this)">Todos</button>
-        <button class="filter-tab" onclick="setFilter('offline', this)">🔴 Offline</button>
-        <button class="filter-tab" onclick="setFilter('online', this)">🟢 Online</button>
-      </div>
+      <!-- Botão Checagem Imediata -->
+      <button class="btn-icon-square" id="btn-check-now" onclick="triggerCheckNow()" title="Forçar checagem imediata de ping">
+        🔄
+      </button>
 
+      <!-- Botão Tela Cheia (Fullscreen API) -->
+      <button class="btn-icon-square" id="btn-fullscreen" onclick="toggleFullscreen()" title="Modo Tela Cheia (NOC Video Wall)">
+        ⛶
+      </button>
+
+      <!-- Botão Abrir Gaveta Lateral (Offcanvas Drawer) -->
+      <button class="btn-menu-trigger" onclick="toggleDrawer(true)" title="Abrir painel de operações e configurações">
+        <span>⚡ Menu</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Sub-barra Limpa: Busca Rápida em Tempo Real e Indicadores de Filtro -->
+  <div class="subbar-container">
+    <div class="search-input-wrap">
+      <span class="search-icon-pos">🔍</span>
+      <input type="text" id="quick-search" placeholder="Filtrar por sala, equipamento, IP ou MAC..." oninput="handleQuickSearch(this.value)">
     </div>
 
-    <!-- Actions -->
-    <div class="btn-group">
-      <label class="switch-label">
-        <input type="checkbox" id="sound-alert" checked> 🔔 Som de Alerta
-      </label>
-      <button class="btn-secondary" id="btn-check-now" onclick="triggerCheckNow()">🔄 Checar Agora</button>
-      <button class="btn-secondary" onclick="openScannerModal()" style="border-color: #3b82f6; color: #60a5fa;">📡 Varredura de Rede</button>
-      <button class="btn-primary" onclick="openAddDeviceModal()">➕ Adicionar</button>
-      <button class="btn-secondary" onclick="openSettingsModal()">⚙️ Configurações</button>
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <div class="active-filter-badge" id="active-filter-badge">
+        <span>Visão:</span> <b id="badge-view-name">Por Salas</b>
+        <span style="color: var(--border);">•</span>
+        <span>Filtro:</span> <b id="badge-filter-name">Todos</b>
+      </div>
+      <button class="btn-clear-filter" id="btn-clear-filter" onclick="clearFilters()" style="display: none;" title="Limpar busca e filtros">
+        ✕ Limpar
+      </button>
     </div>
   </div>
+
+  <!-- Backdrop da Gaveta Lateral -->
+  <div class="drawer-backdrop" id="drawer-backdrop" onclick="toggleDrawer(false)"></div>
+
+  <!-- Gaveta Lateral Offcanvas (Slide-in Drawer) -->
+  <aside class="offcanvas-drawer" id="offcanvas-drawer" aria-label="Painel de Operações">
+    <div class="drawer-header">
+      <div class="drawer-title">
+        <span>⚡</span>
+        <div>
+          <div>Painel de Operações</div>
+          <div style="font-size: 11px; color: var(--text-muted); font-weight: 500;">Ações, Varredura & Ajustes</div>
+        </div>
+      </div>
+      <button class="btn-icon" onclick="toggleDrawer(false)" style="font-size: 18px;" title="Fechar Painel (ESC)">✕</button>
+    </div>
+
+    <div class="drawer-body">
+      <!-- Seção 1: Operações de Dispositivos e Rede -->
+      <div class="drawer-section">
+        <div class="drawer-section-title">Dispositivos & Rede</div>
+        
+        <button class="drawer-btn btn-primary" onclick="toggleDrawer(false); openAddDeviceModal();">
+          <span style="font-size: 16px;">➕</span>
+          <span>Adicionar Novo Dispositivo</span>
+        </button>
+
+        <button class="drawer-btn btn-secondary" style="border-color: #3b82f6; color: #60a5fa;" onclick="toggleDrawer(false); openScannerModal();">
+          <span style="font-size: 16px;">📡</span>
+          <span>Varredura de Rede (Scanner de IPs)</span>
+        </button>
+      </div>
+
+      <!-- Seção 2: Preferências & Notificações -->
+      <div class="drawer-section">
+        <div class="drawer-section-title">Alertas & Notificações</div>
+
+        <div class="drawer-card" style="display: flex; flex-direction: column; gap: 12px;">
+          <label class="switch-label" style="justify-content: space-between; width: 100%; cursor: pointer;">
+            <span style="display: flex; align-items: center; gap: 8px; font-weight: 600; color: white;">
+              <span>🔔</span> Som de Alerta (Offline)
+            </span>
+            <input type="checkbox" id="sound-alert" checked onchange="toggleSoundAlert(this.checked)">
+          </label>
+
+          <button type="button" class="btn-secondary" style="font-size: 11px; padding: 6px 10px; width: 100%; justify-content: center;" onclick="playAlertSound()">
+            🔊 Testar Som de Alerta
+          </button>
+        </div>
+
+        <button class="drawer-btn btn-secondary" onclick="toggleDrawer(false); openSettingsModal();">
+          <span style="font-size: 16px;">⚙️</span>
+          <span>Configurações SMTP & E-mail</span>
+        </button>
+      </div>
+
+      <!-- Seção 3: Diagnóstico & Status NOC -->
+      <div class="drawer-section" style="margin-top: auto;">
+        <div class="drawer-section-title">Status do Sistema NOC</div>
+        <div class="drawer-card" style="font-size: 11px; color: var(--text-muted); display: flex; flex-direction: column; gap: 6px;">
+          <div style="display: flex; justify-content: space-between;">
+            <span>Motor de Monitoramento:</span>
+            <b style="color: #34d399;">Multi-threaded Flask</b>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span>Camada 2 (MAC):</span>
+            <b style="color: #60a5fa;">Win32 SendARP Nativo</b>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span>Watchdog DHCP:</span>
+            <b style="color: #38bdf8;">Auto-Tracking Ativo</b>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span>Versão:</span>
+            <b style="color: white;">v1.1 Modern NOC</b>
+          </div>
+        </div>
+      </div>
+    </div>
+  </aside>
 
   <!-- Main Content -->
   <main>
@@ -1306,12 +1609,21 @@
     let currentView = 'rooms'; // 'rooms' ou 'all'
     let activeRoom = null;      // nome da sala filtrada no modo drill-down
     let currentFilter = 'all';  // 'all', 'offline', 'online'
+    let searchQuery = '';      // filtro de busca em tempo real
     let pollInterval = 15;
     let countdown = 15;
     let timer = null;
     let discoveredList = [];
 
     window.addEventListener('DOMContentLoaded', () => {
+      try {
+        const savedSound = localStorage.getItem('noc_sound_alert');
+        const soundChk = document.getElementById('sound-alert');
+        if (soundChk && savedSound !== null) {
+          soundChk.checked = savedSound === '1';
+        }
+      } catch (e) {}
+
       fetchSettings();
       fetchDevices();
       startCountdown();
@@ -1334,7 +1646,8 @@
         devices = data;
         renderApp();
 
-        if (newlyOffline && document.getElementById('sound-alert').checked) {
+        const soundChk = document.getElementById('sound-alert');
+        if (newlyOffline && soundChk && soundChk.checked) {
           playAlertSound();
         }
       } catch (err) {
@@ -1344,10 +1657,11 @@
 
     async function triggerCheckNow() {
       const btn = document.getElementById('btn-check-now');
-      const originalText = btn ? btn.innerHTML : '🔄 Checar Agora';
+      const originalText = btn ? btn.innerHTML : '🔄';
       if (btn) {
         btn.disabled = true;
-        btn.innerHTML = '🔄 Checando...';
+        btn.innerHTML = '⏳';
+        btn.style.opacity = '0.7';
       }
       try {
         const res = await fetch('/api/devices/check-now', { method: 'POST' });
@@ -1356,8 +1670,7 @@
           devices = data;
           renderApp();
           countdown = pollInterval;
-          const badge = document.getElementById('countdown-text');
-          if (badge) badge.innerText = `Atualizando em: ${formatCountdown(countdown)}`;
+          updateCountdownDisplay();
         } else {
           await fetchDevices();
         }
@@ -1368,6 +1681,7 @@
         if (btn) {
           btn.disabled = false;
           btn.innerHTML = originalText;
+          btn.style.opacity = '1';
         }
       }
     }
@@ -1451,20 +1765,32 @@
     function setViewMode(mode) {
       currentView = mode;
       activeRoom = null;
-      document.getElementById('btn-view-rooms').classList.toggle('active', mode === 'rooms');
-      document.getElementById('btn-view-all').classList.toggle('active', mode === 'all');
+      const btnRooms = document.getElementById('btn-view-rooms');
+      const btnAll = document.getElementById('btn-view-all');
+      const chipRooms = document.getElementById('chip-rooms');
+      const badgeViewName = document.getElementById('badge-view-name');
+
+      if (btnRooms) btnRooms.classList.toggle('active', mode === 'rooms');
+      if (btnAll) btnAll.classList.toggle('active', mode === 'all');
+      if (chipRooms) chipRooms.classList.toggle('chip-active', mode === 'rooms');
+      if (badgeViewName) badgeViewName.innerText = mode === 'rooms' ? 'Por Salas' : 'Lista Geral';
+
       renderApp();
     }
 
     function enterRoomView(roomName) {
       activeRoom = roomName;
       currentView = 'rooms';
+      const badgeViewName = document.getElementById('badge-view-name');
+      if (badgeViewName) badgeViewName.innerText = `Sala: ${roomName}`;
       renderApp();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function exitRoomView() {
       activeRoom = null;
+      const badgeViewName = document.getElementById('badge-view-name');
+      if (badgeViewName) badgeViewName.innerText = currentView === 'rooms' ? 'Por Salas' : 'Lista Geral';
       renderApp();
     }
 
@@ -1562,8 +1888,19 @@
       grid.innerHTML = '';
 
       const filteredRooms = roomGroups.filter(r => {
-        if (currentFilter === 'offline') return r.offlineCount > 0;
-        if (currentFilter === 'online') return r.offlineCount === 0 && r.devices.length > 0;
+        if (currentFilter === 'offline' && r.offlineCount === 0) return false;
+        if (currentFilter === 'online' && (r.offlineCount > 0 || r.devices.length === 0)) return false;
+        if (searchQuery) {
+          const matchRoom = r.name.toLowerCase().includes(searchQuery) || (r.location && r.location.toLowerCase().includes(searchQuery));
+          const matchDev = r.devices.some(d => 
+            (d.name && d.name.toLowerCase().includes(searchQuery)) ||
+            (d.ip && d.ip.includes(searchQuery)) ||
+            (d.hostname && d.hostname.toLowerCase().includes(searchQuery)) ||
+            (d.mac && d.mac.toLowerCase().includes(searchQuery)) ||
+            (d.model && d.model.toLowerCase().includes(searchQuery))
+          );
+          if (!matchRoom && !matchDev) return false;
+        }
         return true;
       });
 
@@ -1573,9 +1910,9 @@
             <div style="font-size: 32px; margin-bottom: 12px;">🏢</div>
             <h3 style="color: white; margin-bottom: 6px;">Nenhuma sala encontrada</h3>
             <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 18px;">
-              ${currentFilter !== 'all' ? 'Nenhuma sala atende ao filtro selecionado.' : 'Cadastre seu primeiro equipamento e agrupe em uma sala.'}
+              ${searchQuery ? `Nenhum resultado corresponde à busca "<b>${escapeHtml(searchQuery)}</b>".` : (currentFilter !== 'all' ? 'Nenhuma sala atende ao filtro selecionado.' : 'Cadastre seu primeiro equipamento e agrupe em uma sala.')}
             </p>
-            <button class="btn-primary" onclick="openAddDeviceModal()">➕ Cadastrar Dispositivo</button>
+            ${searchQuery ? '<button class="btn-secondary" onclick="clearFilters()">Limpar Busca</button>' : '<button class="btn-primary" onclick="openAddDeviceModal()">➕ Cadastrar Dispositivo</button>'}
           </div>
         `;
         return;
@@ -1661,8 +1998,19 @@
       grid.innerHTML = '';
 
       const filtered = deviceList.filter(d => {
-        if (currentFilter === 'offline') return d.last_status === 'offline';
-        if (currentFilter === 'online') return d.last_status === 'online';
+        if (currentFilter === 'offline' && d.last_status !== 'offline') return false;
+        if (currentFilter === 'online' && d.last_status !== 'online') return false;
+        if (searchQuery) {
+          const match = 
+            (d.name && d.name.toLowerCase().includes(searchQuery)) ||
+            (d.ip && d.ip.includes(searchQuery)) ||
+            (d.room && d.room.toLowerCase().includes(searchQuery)) ||
+            (d.hostname && d.hostname.toLowerCase().includes(searchQuery)) ||
+            (d.mac && d.mac.toLowerCase().includes(searchQuery)) ||
+            (d.model && d.model.toLowerCase().includes(searchQuery)) ||
+            (d.location && d.location.toLowerCase().includes(searchQuery));
+          if (!match) return false;
+        }
         return true;
       });
 
@@ -1670,7 +2018,10 @@
         grid.innerHTML = `
           <div style="grid-column: 1 / -1; text-align: center; padding: 50px 20px; background: var(--bg-card); border: 1px dashed var(--border); border-radius: 14px;">
             <h4 style="color: white; margin-bottom: 6px;">Nenhum dispositivo encontrado</h4>
-            <p style="color: var(--text-muted); font-size: 13px;">Nenhum equipamento atende ao filtro ou sala selecionada.</p>
+            <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 14px;">
+              ${searchQuery ? `Nenhum equipamento corresponde à busca "<b>${escapeHtml(searchQuery)}</b>".` : 'Nenhum equipamento atende ao filtro ou sala selecionada.'}
+            </p>
+            ${searchQuery ? '<button class="btn-secondary" onclick="clearFilters()">Limpar Busca</button>' : ''}
           </div>
         `;
         return;
@@ -1800,18 +2151,22 @@
       return s > 0 ? `${m}m ${s}s` : `${m}m`;
     }
 
+    function updateCountdownDisplay() {
+      const valEl = document.getElementById('countdown-val');
+      if (valEl) valEl.innerText = formatCountdown(countdown);
+    }
+
     function startCountdown() {
       if (timer) clearInterval(timer);
       timer = setInterval(async () => {
         countdown--;
         if (countdown <= 0) {
           countdown = pollInterval;
-          const badge = document.getElementById('countdown-text');
-          if (badge) badge.innerText = `Sincronizando...`;
+          const valEl = document.getElementById('countdown-val');
+          if (valEl) valEl.innerText = '...';
           await fetchDevices();
         }
-        const badge = document.getElementById('countdown-text');
-        if (badge) badge.innerText = `Atualizando em: ${formatCountdown(countdown)}`;
+        updateCountdownDisplay();
       }, 1000);
     }
 
@@ -1826,8 +2181,7 @@
       const selCfg = document.getElementById('cfg-interval');
       if (selCfg) selCfg.value = String(newInterval);
 
-      const badge = document.getElementById('countdown-text');
-      if (badge) badge.innerText = `Atualizando em: ${formatCountdown(countdown)}`;
+      updateCountdownDisplay();
 
       // Salva no backend para sincronizar o intervalo de ping em tempo real
       try {
@@ -2260,8 +2614,7 @@
           selCfg.value = String(pollInterval);
         }
 
-        const badge = document.getElementById('countdown-text');
-        if (badge) badge.innerText = `Atualizando em: ${formatCountdown(countdown)}`;
+        updateCountdownDisplay();
 
         document.getElementById('cfg-email-enabled').checked = s.email_enabled === '1';
         document.getElementById('cfg-smtp-host').value = s.smtp_host || '';
@@ -2515,12 +2868,106 @@
       }
     }
 
-    // --- FILTROS & MODAIS ---
-    function setFilter(type, btn) {
+    // --- FILTROS, CHIPS INTERATIVOS & BUSCA RÁPIDA ---
+    function setFilter(type) {
       currentFilter = type;
-      document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
+      updateFilterChipsUI();
       renderApp();
+    }
+
+    function updateFilterChipsUI() {
+      const chipTotal = document.getElementById('chip-total');
+      const chipOnline = document.getElementById('chip-online');
+      const chipOffline = document.getElementById('chip-offline');
+      const badgeFilterName = document.getElementById('badge-filter-name');
+      const clearBtn = document.getElementById('btn-clear-filter');
+
+      if (chipTotal) chipTotal.classList.toggle('chip-active', currentFilter === 'all');
+      if (chipOnline) chipOnline.classList.toggle('chip-active', currentFilter === 'online');
+      if (chipOffline) chipOffline.classList.toggle('chip-active', currentFilter === 'offline');
+
+      if (badgeFilterName) {
+        if (currentFilter === 'all') badgeFilterName.innerText = 'Todos';
+        else if (currentFilter === 'online') badgeFilterName.innerHTML = '<span style="color:#10b981;">Online</span>';
+        else if (currentFilter === 'offline') badgeFilterName.innerHTML = '<span style="color:#ef4444;">Offline</span>';
+      }
+
+      const hasActive = currentFilter !== 'all' || Boolean(searchQuery);
+      if (clearBtn) clearBtn.style.display = hasActive ? 'inline-block' : 'none';
+    }
+
+    function handleQuickSearch(val) {
+      searchQuery = (val || '').trim().toLowerCase();
+      updateFilterChipsUI();
+      renderApp();
+    }
+
+    function clearFilters() {
+      currentFilter = 'all';
+      searchQuery = '';
+      const input = document.getElementById('quick-search');
+      if (input) input.value = '';
+      updateFilterChipsUI();
+      renderApp();
+    }
+
+    // --- MODO TELA CHEIA (FULLSCREEN API) ---
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        if (document.documentElement.requestFullscreen) {
+          document.documentElement.requestFullscreen();
+        } else if (document.documentElement.webkitRequestFullscreen) {
+          document.documentElement.webkitRequestFullscreen();
+        } else if (document.documentElement.msRequestFullscreen) {
+          document.documentElement.msRequestFullscreen();
+        }
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+          document.webkitExitFullscreen();
+        } else if (document.msExitFullscreen) {
+          document.msExitFullscreen();
+        }
+      }
+    }
+
+    document.addEventListener('fullscreenchange', () => {
+      const btn = document.getElementById('btn-fullscreen');
+      if (!btn) return;
+      if (document.fullscreenElement) {
+        btn.innerHTML = '🗗';
+        btn.title = 'Sair da Tela Cheia (ESC)';
+        btn.classList.add('active');
+      } else {
+        btn.innerHTML = '⛶';
+        btn.title = 'Modo Tela Cheia (NOC Video Wall)';
+        btn.classList.remove('active');
+      }
+    });
+
+    // --- GAVETA LATERAL RETRÁTIL (OFFCANVAS DRAWER) ---
+    function toggleDrawer(forceOpen) {
+      const drawer = document.getElementById('offcanvas-drawer');
+      const backdrop = document.getElementById('drawer-backdrop');
+      if (!drawer || !backdrop) return;
+
+      const isOpen = drawer.classList.contains('open');
+      const willOpen = forceOpen !== undefined ? forceOpen : !isOpen;
+
+      if (willOpen) {
+        drawer.classList.add('open');
+        backdrop.classList.add('open');
+      } else {
+        drawer.classList.remove('open');
+        backdrop.classList.remove('open');
+      }
+    }
+
+    function toggleSoundAlert(enabled) {
+      try {
+        localStorage.setItem('noc_sound_alert', enabled ? '1' : '0');
+      } catch (e) {}
     }
 
     function openModal(id) { document.getElementById(id).style.display = 'flex'; }
@@ -2553,7 +3000,7 @@
       }
     }
 
-    // Fecha o tooltip ao clicar em qualquer lugar fora ou ao pressionar Escape
+    // Fecha tooltips ou gaveta ao clicar fora ou ao pressionar Escape
     document.addEventListener('click', (e) => {
       if (!e.target.closest('.help-tooltip-wrapper')) {
         document.querySelectorAll('.help-tooltip-wrapper.active').forEach(w => w.classList.remove('active'));
@@ -2562,6 +3009,7 @@
 
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
+        toggleDrawer(false);
         document.querySelectorAll('.help-tooltip-wrapper.active').forEach(w => w.classList.remove('active'));
       }
     });
