@@ -1,0 +1,72 @@
+================================================================================
+                    TERMOS DE LICENÇA DE USO E DISTRIBUIÇÃO
+                     MONITOR NOC - SALAS & VIDEOCONFERÊNCIA
+================================================================================
+
+Direitos Autorais (c) 2026 Davis Vasconcellos. Todos os direitos reservados.
+
+É concedida a qualquer pessoa permissão gratuita para obter uma cópia deste
+software e dos arquivos de documentação associados ("Software"), para usar,
+executar, copiar, mesclar e distribuir o Software, sujeito estritamente às
+seguintes condições:
+
+1. USO E REDISTRIBUIÇÃO:
+   O Software pode ser utilizado livremente para fins pessoais, educacionais ou
+   em ambientes corporativos internos (para monitoramento de infraestrutura).
+   A redistribuição das cópias originais é permitida, desde que este aviso de
+   licença e os direitos autorais acompanhem todas as cópias.
+
+2. ATRIBUIÇÃO E CRÉDITO ORIGINAL (OBRIGATÓRIO):
+   Em caso de qualquer modificação, adaptação, incorporação ou criação de obras
+   derivadas deste Software, os créditos originais ao autor (Davis Vasconcellos)
+   e a menção ao projeto original DEVEM ser mantidos de forma clara, visível e
+   destacada na interface gráfica do usuário, nos cabeçalhos dos arquivos fontes
+   e em qualquer documentação associada.
+
+3. PROIBIÇÃO DE COMERCIALIZAÇÃO (USO NÃO-COMERCIAL):
+   É ESTRITAMENTE PROIBIDA a venda, comercialização, sublicenciamento com cobrança,
+   locação ou qualquer forma de exploração comercial deste Software ou de
+   qualquer versão modificada, adaptada ou derivada dele. Nenhuma parte deste
+   código pode ser empacotada ou revendida como produto ou serviço comercial pago.
+
+4. LIMITAÇÃO DE RESPONSABILIDADE E ISENÇÃO DE GARANTIAS:
+   O SOFTWARE É FORNECIDO "NO ESTADO EM QUE SE ENCONTRA" ("AS IS"), SEM QUALQUER
+   TIPO DE GARANTIA, EXPRESSA OU IMPLÍCITA, INCLUINDO, MAS NÃO SE LIMITANDO A,
+   GARANTIAS DE COMERCIALIZAÇÃO, ADEQUAÇÃO A UMA FINALIDADE ESPECÍFICA E NÃO
+   VIOLAÇÃO. EM NENHUMA HIPÓTESE O AUTOR OU OS TITULARES DOS DIREITOS AUTORAIS
+   SERÃO RESPONSÁVEIS POR QUAISQUER REIVINDICAÇÕES, DANOS, PERDAS DE DADOS OU
+   OUTRAS RESPONSABILIDADES DECORRENTES DO USO OU DA IMPOSSIBILIDADE DE USO
+   DESTE SOFTWARE.
+
+================================================================================
+                                 ENGLISH VERSION
+================================================================================
+
+Copyright (c) 2026 Davis Vasconcellos. All rights reserved.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to use,
+run, copy, and distribute the Software, subject strictly to the following conditions:
+
+1. USE AND REDISTRIBUTION:
+   The Software may be used freely for personal, educational, or internal
+   corporate infrastructure monitoring. Redistribution of original copies is
+   permitted provided that this copyright notice and permission notice are
+   included in all copies.
+
+2. ATTRIBUTION (REQUIRED):
+   Any modification, adaptation, or derivative work of this Software MUST preserve
+   and clearly display original credit to the author (Davis Vasconcellos) and
+   reference to the original project in the user interface, source code headers,
+   and associated documentation.
+
+3. NON-COMMERCIAL:
+   Commercial use, sale, sublicensing for a fee, leasing, or any commercial
+   exploitation of this Software, in whole or in part, modified or unmodified,
+   is STRICTLY PROHIBITED.
+
+4. DISCLAIMER:
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY CLAIM, DAMAGES, OR
+   OTHER LIABILITY ARISING FROM THE USE OF THE SOFTWARE.
+================================================================================

@@ -1,0 +1,1204 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Poly Lens - Monitor de Salas e Dispositivos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-main: #0a0e17;
+      --bg-card: #111827;
+      --bg-card-hover: #162032;
+      --border: #1f293d;
+      --border-focus: #3b82f6;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+      --online: #10b981;
+      --online-bg: rgba(16, 185, 129, 0.12);
+      --offline: #ef4444;
+      --offline-bg: rgba(239, 68, 68, 0.15);
+      --offline-glow: rgba(239, 68, 68, 0.35);
+      --warning: #f59e0b;
+      --font: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: var(--font);
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Header */
+    header {
+      background: rgba(17, 24, 39, 0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 28px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .brand-area {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-badge {
+      background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+      color: white;
+      font-weight: 800;
+      font-size: 15px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      letter-spacing: 0.5px;
+      box-shadow: 0 2px 10px rgba(234, 88, 12, 0.3);
+    }
+
+    .brand-title {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    .brand-subtitle {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* Global Counters */
+    .counters-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .stat-chip {
+      background: #172033;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .stat-chip .dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+    }
+
+    .stat-chip.total .dot { background: var(--accent); }
+    .stat-chip.online .dot { background: var(--online); box-shadow: 0 0 8px var(--online); }
+    .stat-chip.offline .dot { background: var(--offline); box-shadow: 0 0 8px var(--offline); }
+
+    /* Controls Bar */
+    .controls-container {
+      max-width: 1400px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 20px 28px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .interval-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 6px 12px;
+      border-radius: 10px;
+    }
+
+    .interval-box label {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    select, input[type="number"], input[type="text"], input[type="password"] {
+      background: #0d131f;
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 13px;
+      outline: none;
+      transition: border 0.2s;
+    }
+
+    select:focus, input:focus {
+      border-color: var(--border-focus);
+    }
+
+    .timer-badge {
+      background: rgba(59, 130, 246, 0.15);
+      color: #60a5fa;
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .timer-badge .pulse-ring {
+      width: 7px;
+      height: 7px;
+      background: #60a5fa;
+      border-radius: 50%;
+      animation: pulse 1.5s infinite;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      cursor: pointer;
+      border: none;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 8px 14px;
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+    }
+    .btn-primary:hover {
+      background: var(--accent-hover);
+    }
+
+    .btn-secondary {
+      background: #1e293b;
+      color: var(--text-main);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover {
+      background: #273549;
+    }
+
+    .btn-danger {
+      background: #7f1d1d;
+      color: #fca5a5;
+    }
+    .btn-danger:hover {
+      background: #991b1b;
+    }
+
+    /* Filter buttons */
+    .filter-tabs {
+      display: flex;
+      background: #0d131f;
+      padding: 3px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      gap: 3px;
+    }
+
+    .filter-tab {
+      padding: 5px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      border-radius: 6px;
+      background: transparent;
+    }
+
+    .filter-tab.active {
+      background: #1e293b;
+      color: white;
+    }
+
+    /* Main Container */
+    main {
+      max-width: 1400px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 24px 28px 60px;
+      flex: 1;
+    }
+
+    /* Banner de Alerta Crítico */
+    #critical-alert-bar {
+      display: none;
+      background: linear-gradient(90deg, #7f1d1d 0%, #991b1b 100%);
+      border: 1px solid #ef4444;
+      border-radius: 10px;
+      padding: 12px 18px;
+      margin-bottom: 24px;
+      color: #fee2e2;
+      align-items: center;
+      justify-content: space-between;
+      animation: alertPulse 2s infinite ease-in-out;
+    }
+
+    @keyframes alertPulse {
+      0%, 100% { box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
+      50% { box-shadow: 0 0 25px rgba(239, 68, 68, 0.7); }
+    }
+
+    /* Grid de Dispositivos */
+    .devices-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 18px;
+    }
+
+    .device-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+
+    .device-card:hover {
+      transform: translateY(-2px);
+      border-color: #334155;
+    }
+
+    .device-card.status-offline {
+      border-color: rgba(239, 68, 68, 0.6);
+      background: linear-gradient(180deg, rgba(239, 68, 68, 0.08) 0%, var(--bg-card) 100%);
+      box-shadow: 0 4px 20px var(--offline-glow);
+    }
+
+    .device-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 14px;
+    }
+
+    .device-name {
+      font-size: 16px;
+      font-weight: 700;
+      color: white;
+      margin-bottom: 3px;
+    }
+
+    .device-mac {
+      font-size: 11px;
+      font-family: monospace;
+      color: var(--text-muted);
+      letter-spacing: 0.5px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    .status-badge.online {
+      background: var(--online-bg);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.4);
+    }
+
+    .status-badge.offline {
+      background: var(--offline-bg);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.5);
+      animation: blink 1s infinite alternate;
+    }
+
+    .status-badge.unknown {
+      background: #1e293b;
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+    }
+
+    @keyframes blink {
+      from { opacity: 0.7; }
+      to { opacity: 1; }
+    }
+
+    .device-body {
+      margin: 10px 0 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--text-muted);
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      padding-top: 10px;
+    }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .info-row span:last-child {
+      color: var(--text-main);
+      font-weight: 500;
+    }
+
+    .device-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      padding-top: 12px;
+    }
+
+    .last-check-text {
+      font-size: 11px;
+      color: #64748b;
+    }
+
+    .action-icons {
+      display: flex;
+      gap: 6px;
+    }
+
+    .btn-icon {
+      background: transparent;
+      padding: 4px 8px;
+      font-size: 14px;
+      color: var(--text-muted);
+      border-radius: 4px;
+    }
+
+    .btn-icon:hover {
+      background: #1e293b;
+      color: white;
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-muted);
+    }
+
+    /* Modais */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(5px);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal {
+      background: #131c2e;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      width: 90%;
+      max-width: 480px;
+      padding: 24px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    .modal-title {
+      font-size: 17px;
+      font-weight: 700;
+    }
+
+    .form-group {
+      margin-bottom: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .form-group label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .form-group input {
+      width: 100%;
+      padding: 8px 12px;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    /* Sound Switch */
+    .switch-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--text-muted);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .switch-label input {
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="brand-area">
+      <div class="logo-badge">POLY</div>
+      <div>
+        <div class="brand-title">Monitor de Salas & Videoconferência</div>
+        <div class="brand-subtitle" id="tenant-display">Conectado ao Poly Lens</div>
+      </div>
+    </div>
+
+    <!-- Counters -->
+    <div class="counters-bar">
+      <div class="stat-chip total">
+        <div class="dot"></div>
+        <span>Total: <b id="count-total">0</b></span>
+      </div>
+      <div class="stat-chip online">
+        <div class="dot"></div>
+        <span>Online: <b id="count-online">0</b></span>
+      </div>
+      <div class="stat-chip offline">
+        <div class="dot"></div>
+        <span>Offline: <b id="count-offline">0</b></span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Controls -->
+  <div class="controls-container">
+    <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+      
+      <!-- Interval Selector & Badge -->
+      <div class="interval-box">
+        <label for="interval-select">⏱️ Intervalo:</label>
+        <select id="interval-select" onchange="changeInterval()">
+          <option value="15">15s</option>
+          <option value="30">30s</option>
+          <option value="60">1m</option>
+          <option value="120">2m</option>
+          <option value="180">3m</option>
+          <option value="300">5m</option>
+          <option value="600">10m</option>
+          <option value="900">15m</option>
+          <option value="custom">Personalizado...</option>
+        </select>
+        <div id="custom-seconds-wrap" style="display: none; align-items: center; gap: 4px;">
+          <input type="number" id="custom-seconds-input" min="5" max="3600" value="20" style="width: 65px;" onchange="applyCustomInterval()">
+          <span style="font-size: 12px; color: var(--text-muted);">s</span>
+        </div>
+        <div class="timer-badge" id="countdown-badge">
+          <div class="pulse-ring"></div>
+          <span id="countdown-text">Atualizando em: 15s</span>
+        </div>
+      </div>
+
+      <!-- Filtros -->
+      <div class="filter-tabs">
+        <button class="filter-tab active" onclick="setFilter('all', this)">Todos</button>
+        <button class="filter-tab" onclick="setFilter('offline', this)">🔴 Apenas Offline</button>
+        <button class="filter-tab" onclick="setFilter('online', this)">🟢 Apenas Online</button>
+      </div>
+
+    </div>
+
+    <!-- Actions -->
+    <div class="btn-group">
+      <label class="switch-label">
+        <input type="checkbox" id="sound-alert" checked> 🔔 Som de Alerta
+      </label>
+      <button class="btn-secondary" onclick="checkNow()">🔄 Verificar Agora</button>
+      <button class="btn-secondary" onclick="autoDiscoverDevices()" title="Importa salas automaticamente da conta Poly Lens">🔍 Buscar da Conta</button>
+      <button class="btn-primary" onclick="openAddDeviceModal()">➕ Adicionar Sala</button>
+      <button class="btn-secondary" onclick="openCredsModal()">⚙️ Credenciais</button>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <main>
+    <div id="critical-alert-bar">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 20px;">⚠️</span>
+        <div>
+          <b id="alert-title">Atenção: Dispositivo Offline Detectado!</b>
+          <div id="alert-subtitle" style="font-size: 13px; opacity: 0.9;">Um ou mais equipamentos de sala perderam comunicação.</div>
+        </div>
+      </div>
+      <button class="btn-secondary" onclick="document.getElementById('critical-alert-bar').style.display='none'">Fechar</button>
+    </div>
+
+    <!-- Grid -->
+    <div class="devices-grid" id="devices-grid">
+      <!-- Cards serão injetados dinamicamente via JS -->
+    </div>
+
+    <div class="empty-state" id="empty-state" style="display: none;">
+      <h3>Nenhum dispositivo encontrado</h3>
+      <p style="margin-top: 6px; font-size: 13px;">Clique em <b>Adicionar Sala</b> ou <b>Buscar da Conta</b> para cadastrar equipamentos para monitoramento.</p>
+    </div>
+  </main>
+
+  <!-- Modal: Adicionar/Editar Sala -->
+  <div class="modal-backdrop" id="device-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title" id="modal-device-title">Adicionar Dispositivo</div>
+        <button class="btn-icon" onclick="closeModal('device-modal')">✕</button>
+      </div>
+      <input type="hidden" id="edit-device-index" value="-1">
+      <div class="form-group">
+        <label for="dev-name">Nome da Sala / Equipamento *</label>
+        <input type="text" id="dev-name" placeholder="Ex: Sala Diretoria X50">
+      </div>
+      <div class="form-group">
+        <label for="dev-id">Endereço MAC ou ID do Dispositivo *</label>
+        <input type="text" id="dev-id" placeholder="Ex: 00e0db6a9186 ou 00:e0:db:6a:91:86">
+        <span style="font-size: 11px; color: var(--text-muted);">Pode inserir com ou sem os dois pontos.</span>
+      </div>
+      <div class="form-group">
+        <label for="dev-model">Modelo (Opcional)</label>
+        <input type="text" id="dev-model" placeholder="Ex: Studio X50, Studio USB, Trio">
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeModal('device-modal')">Cancelar</button>
+        <button class="btn-primary" onclick="saveDevice()">Salvar Dispositivo</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Credenciais da API -->
+  <div class="modal-backdrop" id="creds-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">Configurar Acesso Poly Lens</div>
+        <button class="btn-icon" onclick="closeModal('creds-modal')">✕</button>
+      </div>
+      <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 14px;">
+        As credenciais são obtidas em <b>lens.poly.com</b> &gt; <i>Account Settings &gt; API Credentials</i> e ficam salvas apenas no seu navegador.
+      </div>
+      <div class="form-group">
+        <label for="cfg-client-id">Client ID *</label>
+        <input type="text" id="cfg-client-id" placeholder="Insira o Client ID">
+      </div>
+      <div class="form-group">
+        <label for="cfg-client-secret">Client Secret *</label>
+        <input type="password" id="cfg-client-secret" placeholder="Insira o Client Secret">
+      </div>
+      <div class="form-group">
+        <label for="cfg-tenant-id">Tenant ID (Opcional - detectado automaticamente)</label>
+        <input type="text" id="cfg-tenant-id" placeholder="Deixe em branco para auto-detectar">
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="testConnection()">Testar Conexão</button>
+        <button class="btn-primary" onclick="saveCredentials()">Salvar e Conectar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- ESTADO INICIAL ---
+    const DEFAULT_DEVICES = [
+      { name: "Sala de Reunião 1", id: "00e0db6a9186", model: "Studio X50", status: "unknown", lastCheck: null },
+      { name: "Sala de Reunião 2", id: "00e0db9a87d3", model: "Studio X30", status: "unknown", lastCheck: null }
+    ];
+
+    let devices = JSON.parse(localStorage.getItem('poly_devices')) || DEFAULT_DEVICES;
+    let credentials = JSON.parse(localStorage.getItem('poly_creds')) || { clientId: '', clientSecret: '', tenantId: '' };
+    let bearerToken = null;
+    let tokenExpiry = null;
+    let intervalSeconds = parseInt(localStorage.getItem('poly_interval')) || 15;
+    let countdownRemaining = intervalSeconds;
+    let timerInterval = null;
+    let currentFilter = 'all';
+
+    // Normaliza MAC: remove :, -, espaços e deixa em minúsculo
+    function cleanId(id) {
+      return (id || '').replace(/[:\-\s]/g, '').toLowerCase();
+    }
+
+    // Inicialização
+    window.addEventListener('DOMContentLoaded', () => {
+      // Configura select de intervalo
+      const sel = document.getElementById('interval-select');
+      if (['15', '30', '60', '120', '180', '300', '600', '900'].includes(String(intervalSeconds))) {
+        sel.value = String(intervalSeconds);
+      } else {
+        sel.value = 'custom';
+        document.getElementById('custom-seconds-wrap').style.display = 'inline-flex';
+        document.getElementById('custom-seconds-input').value = intervalSeconds;
+      }
+
+      renderDevices();
+
+      // Checa se já tem credenciais configuradas
+      if (!credentials.clientId || !credentials.clientSecret) {
+        openCredsModal();
+      } else {
+        checkNow();
+      }
+
+      startCountdown();
+    });
+
+    // --- RENDERIZAÇÃO DE DISPOSITIVOS ---
+    function renderDevices() {
+      const grid = document.getElementById('devices-grid');
+      const empty = document.getElementById('empty-state');
+      grid.innerHTML = '';
+
+      let onlineCount = 0;
+      let offlineCount = 0;
+
+      const filtered = devices.filter(d => {
+        if (d.status === 'online') onlineCount++;
+        if (d.status === 'offline') offlineCount++;
+
+        if (currentFilter === 'offline') return d.status === 'offline';
+        if (currentFilter === 'online') return d.status === 'online';
+        return true;
+      });
+
+      document.getElementById('count-total').innerText = devices.length;
+      document.getElementById('count-online').innerText = onlineCount;
+      document.getElementById('count-offline').innerText = offlineCount;
+
+      if (offlineCount > 0) {
+        document.getElementById('critical-alert-bar').style.display = 'flex';
+        document.getElementById('alert-title').innerText = `Atenção: ${offlineCount} dispositivo(s) offline!`;
+      } else {
+        document.getElementById('critical-alert-bar').style.display = 'none';
+      }
+
+      if (filtered.length === 0) {
+        empty.style.display = 'block';
+        return;
+      }
+      empty.style.display = 'none';
+
+      filtered.forEach((d, idx) => {
+        const originalIndex = devices.indexOf(d);
+        const card = document.createElement('div');
+        const statusClass = d.status === 'online' ? 'status-online' : (d.status === 'offline' ? 'status-offline' : '');
+        card.className = `device-card ${statusClass}`;
+
+        let badgeHtml = '';
+        if (d.status === 'online') {
+          badgeHtml = `<span class="status-badge online">● Online</span>`;
+        } else if (d.status === 'offline') {
+          badgeHtml = `<span class="status-badge offline">⚠ Offline</span>`;
+        } else {
+          badgeHtml = `<span class="status-badge unknown">● Verificando...</span>`;
+        }
+
+        const formattedMac = d.id.length === 12 
+          ? d.id.match(/.{1,2}/g).join(':').toUpperCase() 
+          : d.id;
+
+        card.innerHTML = `
+          <div>
+            <div class="device-header">
+              <div>
+                <div class="device-name">${escapeHtml(d.name)}</div>
+                <div class="device-mac">${escapeHtml(formattedMac)}</div>
+              </div>
+              ${badgeHtml}
+            </div>
+
+            <div class="device-body">
+              <div class="info-row">
+                <span>Modelo:</span>
+                <span>${escapeHtml(d.model || 'Poly Device')}</span>
+              </div>
+              <div class="info-row">
+                <span>Último IP:</span>
+                <span>${escapeHtml(d.ip || '---')}</span>
+              </div>
+              <div class="info-row">
+                <span>Versão Firmware:</span>
+                <span>${escapeHtml(d.firmware || '---')}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="device-footer">
+            <span class="last-check-text">${d.lastCheck ? 'Checado às ' + d.lastCheck : 'Aguardando verificação'}</span>
+            <div class="action-icons">
+              <button class="btn-icon" title="Editar" onclick="openEditDeviceModal(${originalIndex})">✏️</button>
+              <button class="btn-icon" title="Remover" onclick="deleteDevice(${originalIndex})">🗑️</button>
+            </div>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    // --- CONTROLE DE INTERVALO ---
+    function changeInterval() {
+      const sel = document.getElementById('interval-select');
+      if (sel.value === 'custom') {
+        document.getElementById('custom-seconds-wrap').style.display = 'inline-flex';
+        applyCustomInterval();
+      } else {
+        document.getElementById('custom-seconds-wrap').style.display = 'none';
+        intervalSeconds = parseInt(sel.value);
+        saveIntervalSetting();
+      }
+    }
+
+    function applyCustomInterval() {
+      const val = parseInt(document.getElementById('custom-seconds-input').value) || 15;
+      intervalSeconds = Math.max(5, val);
+      saveIntervalSetting();
+    }
+
+    function saveIntervalSetting() {
+      localStorage.setItem('poly_interval', intervalSeconds);
+      countdownRemaining = intervalSeconds;
+      updateCountdownBadge();
+    }
+
+    function startCountdown() {
+      if (timerInterval) clearInterval(timerInterval);
+      timerInterval = setInterval(() => {
+        countdownRemaining--;
+        if (countdownRemaining <= 0) {
+          countdownRemaining = intervalSeconds;
+          checkNow();
+        }
+        updateCountdownBadge();
+      }, 1000);
+    }
+
+    function updateCountdownBadge() {
+      const badgeText = document.getElementById('countdown-text');
+      if (badgeText) {
+        if (countdownRemaining < 60) {
+          badgeText.innerText = `Atualizando em: ${countdownRemaining}s`;
+        } else {
+          const m = Math.floor(countdownRemaining / 60);
+          const s = countdownRemaining % 60;
+          badgeText.innerText = `Atualizando em: ${s > 0 ? `${m}m ${s}s` : `${m}m`}`;
+        }
+      }
+    }
+
+    // --- AUTENTICAÇÃO E REQUISIÇÕES POLY LENS ---
+    async function getAccessToken() {
+      if (!credentials.clientId || !credentials.clientSecret) {
+        throw new Error("Credenciais do Poly Lens não configuradas.");
+      }
+
+      // Se token ainda for válido (margem de 5 min)
+      if (bearerToken && tokenExpiry && Date.now() < (tokenExpiry - 300000)) {
+        return bearerToken;
+      }
+
+      const res = await fetch("https://login.lens.poly.com/oauth/token", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          client_id: credentials.clientId.trim(),
+          client_secret: credentials.clientSecret.trim(),
+          grant_type: "client_credentials"
+        })
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error_description || "Falha ao autenticar com a Poly. Verifique Client ID e Secret.");
+      }
+
+      const data = await res.json();
+      bearerToken = data.access_token;
+      tokenExpiry = Date.now() + (data.expires_in * 1000);
+      return bearerToken;
+    }
+
+    async function executeGraphQL(query, variables = {}) {
+      const token = await getAccessToken();
+      const res = await fetch("https://api.silica-prod01.io.lens.poly.com/graphql", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ query, variables })
+      });
+
+      const json = await res.json();
+      if (json.errors && json.errors.length > 0) {
+        throw new Error(json.errors[0].message || "Erro retornado pela API da Poly.");
+      }
+      return json.data;
+    }
+
+    // --- MONITORAMENTO / CHECAGEM DE STATUS ---
+    async function checkNow() {
+      const badgeText = document.getElementById('countdown-text');
+      if (badgeText) badgeText.innerText = `Consultando...`;
+
+      try {
+        // Se ainda não temos o tenantId, busca o primeiro
+        if (!credentials.tenantId) {
+          const tenantData = await executeGraphQL(`query { tenants { id name } }`);
+          if (tenantData.tenants && tenantData.tenants.length > 0) {
+            credentials.tenantId = tenantData.tenants[0].id;
+            localStorage.setItem('poly_creds', JSON.stringify(credentials));
+            document.getElementById('tenant-display').innerText = tenantData.tenants[0].name || "Poly Lens Tenant";
+          }
+        }
+
+        // Busca o inventário completo
+        const invQuery = `
+          query CheckStatus($tenantId: ID!) {
+            tenant(id: $tenantId) {
+              name
+              inventory {
+                deviceSearch(params: { pageSize: 500 }) {
+                  edges {
+                    node {
+                      id
+                      name
+                      macAddress
+                      serialNumber
+                      connected
+                      hardwareModel
+                      softwareVersion
+                    }
+                  }
+                }
+              }
+            }
+          }
+        `;
+
+        const resData = await executeGraphQL(invQuery, { tenantId: credentials.tenantId });
+        const remoteDevices = resData?.tenant?.inventory?.deviceSearch?.edges || [];
+
+        let hadNewlyOffline = false;
+        const nowTime = new Date().toLocaleTimeString('pt-BR');
+
+        // Mapeia o status retornado para os dispositivos cadastrados
+        devices.forEach(localDev => {
+          const targetClean = cleanId(localDev.id);
+          const match = remoteDevices.find(edge => {
+            const r = edge.node;
+            return cleanId(r.macAddress) === targetClean ||
+                   cleanId(r.serialNumber) === targetClean ||
+                   cleanId(r.id) === targetClean;
+          });
+
+          if (match) {
+            const node = match.node;
+            const isOnline = node.connected === true;
+            const prevStatus = localDev.status;
+            localDev.status = isOnline ? 'online' : 'offline';
+            localDev.model = node.hardwareModel || localDev.model;
+            localDev.firmware = node.softwareVersion || localDev.firmware;
+            localDev.lastCheck = nowTime;
+
+            if (prevStatus === 'online' && !isOnline) {
+              hadNewlyOffline = true;
+            }
+          } else {
+            // Se o ID não foi encontrado no inventário da conta
+            localDev.lastCheck = nowTime;
+            localDev.status = 'offline';
+          }
+        });
+
+        localStorage.setItem('poly_devices', JSON.stringify(devices));
+        renderDevices();
+
+        if (hadNewlyOffline && document.getElementById('sound-alert').checked) {
+          playAlertSound();
+        }
+
+      } catch (err) {
+        console.error("Erro na verificação:", err);
+      } finally {
+        countdownRemaining = intervalSeconds;
+        updateCountdownBadge();
+      }
+    }
+
+    // --- AUTO DESCOBERTA DE DISPOSITIVOS ---
+    async function autoDiscoverDevices() {
+      if (!confirm("Deseja importar automaticamente todas as salas e aparelhos cadastrados na sua conta Poly Lens?")) return;
+
+      try {
+        const token = await getAccessToken();
+        if (!credentials.tenantId) {
+          const tenantData = await executeGraphQL(`query { tenants { id name } }`);
+          if (tenantData.tenants && tenantData.tenants.length > 0) {
+            credentials.tenantId = tenantData.tenants[0].id;
+          }
+        }
+
+        const invQuery = `
+          query Discover($tenantId: ID!) {
+            tenant(id: $tenantId) {
+              inventory {
+                deviceSearch(params: { pageSize: 500 }) {
+                  edges {
+                    node {
+                      id
+                      name
+                      macAddress
+                      hardwareModel
+                      connected
+                      softwareVersion
+                    }
+                  }
+                }
+              }
+            }
+          }
+        `;
+
+        const data = await executeGraphQL(invQuery, { tenantId: credentials.tenantId });
+        const edges = data?.tenant?.inventory?.deviceSearch?.edges || [];
+
+        if (edges.length === 0) {
+          alert("Nenhum equipamento foi retornado pela conta Poly Lens.");
+          return;
+        }
+
+        let importedCount = 0;
+        edges.forEach(edge => {
+          const node = edge.node;
+          const cleanNodeId = cleanId(node.macAddress || node.id);
+
+          const exists = devices.some(d => cleanId(d.id) === cleanNodeId);
+          if (!exists) {
+            devices.push({
+              name: node.name || "Sala sem nome",
+              id: node.macAddress || node.id,
+              model: node.hardwareModel || "Poly Device",
+              status: node.connected ? "online" : "offline",
+              firmware: node.softwareVersion || "",
+              lastCheck: new Date().toLocaleTimeString('pt-BR')
+            });
+            importedCount++;
+          }
+        });
+
+        localStorage.setItem('poly_devices', JSON.stringify(devices));
+        renderDevices();
+        alert(`Sucesso! ${importedCount} novo(s) aparelho(s) adicionado(s) à sua tela.`);
+      } catch (err) {
+        alert("Erro ao buscar dispositivos: " + err.message);
+      }
+    }
+
+    // --- CRUD DE DISPOSITIVOS ---
+    function openAddDeviceModal() {
+      document.getElementById('edit-device-index').value = "-1";
+      document.getElementById('modal-device-title').innerText = "Adicionar Dispositivo";
+      document.getElementById('dev-name').value = "";
+      document.getElementById('dev-id').value = "";
+      document.getElementById('dev-model').value = "";
+      openModal('device-modal');
+    }
+
+    function openEditDeviceModal(index) {
+      const d = devices[index];
+      document.getElementById('edit-device-index').value = index;
+      document.getElementById('modal-device-title').innerText = "Editar Dispositivo";
+      document.getElementById('dev-name').value = d.name;
+      document.getElementById('dev-id').value = d.id;
+      document.getElementById('dev-model').value = d.model || "";
+      openModal('device-modal');
+    }
+
+    function saveDevice() {
+      const name = document.getElementById('dev-name').value.trim();
+      const id = document.getElementById('dev-id').value.trim();
+      const model = document.getElementById('dev-model').value.trim();
+      const editIndex = parseInt(document.getElementById('edit-device-index').value);
+
+      if (!name || !id) {
+        alert("Por favor, preencha o Nome e o MAC/ID do dispositivo.");
+        return;
+      }
+
+      if (editIndex >= 0) {
+        devices[editIndex].name = name;
+        devices[editIndex].id = id;
+        devices[editIndex].model = model;
+      } else {
+        devices.push({
+          name,
+          id,
+          model: model || 'Poly Device',
+          status: 'unknown',
+          lastCheck: null
+        });
+      }
+
+      localStorage.setItem('poly_devices', JSON.stringify(devices));
+      closeModal('device-modal');
+      renderDevices();
+      checkNow();
+    }
+
+    function deleteDevice(index) {
+      if (confirm(`Remover "${devices[index].name}" do monitoramento?`)) {
+        devices.splice(index, 1);
+        localStorage.setItem('poly_devices', JSON.stringify(devices));
+        renderDevices();
+      }
+    }
+
+    // --- MODAL DE CREDENCIAIS ---
+    function openCredsModal() {
+      document.getElementById('cfg-client-id').value = credentials.clientId || '';
+      document.getElementById('cfg-client-secret').value = credentials.clientSecret || '';
+      document.getElementById('cfg-tenant-id').value = credentials.tenantId || '';
+      openModal('creds-modal');
+    }
+
+    function saveCredentials() {
+      credentials.clientId = document.getElementById('cfg-client-id').value.trim();
+      credentials.clientSecret = document.getElementById('cfg-client-secret').value.trim();
+      credentials.tenantId = document.getElementById('cfg-tenant-id').value.trim();
+
+      localStorage.setItem('poly_creds', JSON.stringify(credentials));
+      bearerToken = null; // força novo login
+      closeModal('creds-modal');
+      checkNow();
+    }
+
+    async function testConnection() {
+      const oldCreds = { ...credentials };
+      credentials.clientId = document.getElementById('cfg-client-id').value.trim();
+      credentials.clientSecret = document.getElementById('cfg-client-secret').value.trim();
+
+      try {
+        bearerToken = null;
+        await getAccessToken();
+        alert("✅ Conexão bem-sucedida com a nuvem do Poly Lens!");
+      } catch (err) {
+        alert("❌ Erro de conexão: " + err.message);
+      } finally {
+        credentials = oldCreds;
+      }
+    }
+
+    // --- ALERTA SONORO (Web Audio API sem arquivos externos) ---
+    function playAlertSound() {
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(880, audioCtx.currentTime); // Nota Lá (A5)
+        osc.frequency.exponentialRampToValueAtTime(440, audioCtx.currentTime + 0.3); // Queda para A4
+
+        gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.3);
+      } catch (e) {
+        console.warn("AudioContext bloqueado ou indisponível:", e);
+      }
+    }
+
+    // --- FILTROS & UTILITÁRIOS ---
+    function setFilter(filterType, element) {
+      currentFilter = filterType;
+      document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
+      element.classList.add('active');
+      renderDevices();
+    }
+
+    function openModal(id) {
+      document.getElementById(id).style.display = 'flex';
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).style.display = 'none';
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+  </script>
+</body>
+</html>

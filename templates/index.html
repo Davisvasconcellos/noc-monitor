@@ -1,0 +1,2570 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NOC Monitor - Salas & Videoconferência</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-main: #080c14;
+      --bg-card: #0f172a;
+      --bg-card-hover: #141f36;
+      --border: #1e293b;
+      --border-focus: #3b82f6;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent: #3b82f6;
+      --accent-hover: #2563eb;
+      --online: #10b981;
+      --offline: #ef4444;
+      --offline-glow: rgba(239, 68, 68, 0.35);
+      --font: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --mono: 'JetBrains Mono', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: var(--font); }
+    body { background-color: var(--bg-main); color: var(--text-main); min-height: 100vh; display: flex; flex-direction: column; }
+
+    /* Header */
+    header {
+      background: rgba(15, 23, 42, 0.9);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 28px;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .brand-area { display: flex; align-items: center; gap: 12px; }
+    .logo-badge {
+      background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%);
+      color: white;
+      font-weight: 800;
+      font-size: 13px;
+      padding: 6px 12px;
+      border-radius: 8px;
+      letter-spacing: 0.5px;
+      box-shadow: 0 2px 10px rgba(37, 99, 235, 0.3);
+    }
+
+    .brand-title { font-size: 17px; font-weight: 700; letter-spacing: -0.3px; }
+    .brand-subtitle { font-size: 11px; color: var(--text-muted); }
+
+    .counters-bar { display: flex; align-items: center; gap: 10px; }
+    .stat-chip {
+      background: #172033;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .stat-chip .dot { width: 9px; height: 9px; border-radius: 50%; }
+    .stat-chip.total .dot { background: var(--accent); }
+    .stat-chip.online .dot { background: var(--online); box-shadow: 0 0 8px var(--online); }
+    .stat-chip.offline .dot { background: var(--offline); box-shadow: 0 0 8px var(--offline); }
+
+    /* Controls Bar */
+    .controls-container {
+      max-width: 1400px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 18px 28px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .interval-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 6px 12px;
+      border-radius: 10px;
+    }
+
+    .timer-badge {
+      background: rgba(59, 130, 246, 0.15);
+      color: #60a5fa;
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .timer-badge .pulse-ring {
+      width: 7px; height: 7px; background: #60a5fa; border-radius: 50%; animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      50% { transform: scale(1.3); opacity: 1; }
+      100% { transform: scale(0.95); opacity: 0.8; }
+    }
+
+    .filter-tabs {
+      display: flex;
+      background: #090d16;
+      padding: 3px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      gap: 3px;
+    }
+
+    .filter-tab {
+      padding: 5px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      border-radius: 6px;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+    }
+
+    .filter-tab.active { background: #1e293b; color: white; }
+
+    .btn-group { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+    button {
+      cursor: pointer;
+      border: none;
+      font-size: 13px;
+      font-weight: 600;
+      padding: 8px 14px;
+      border-radius: 8px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary { background: var(--accent); color: white; }
+    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-secondary { background: #1e293b; color: var(--text-main); border: 1px solid var(--border); }
+    .btn-secondary:hover { background: #273549; }
+
+    /* Main Container */
+    main {
+      max-width: 1400px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 22px 28px 60px;
+      flex: 1;
+    }
+
+    /* Banner Crítico */
+    #critical-alert-bar {
+      display: none;
+      background: linear-gradient(90deg, #7f1d1d 0%, #991b1b 100%);
+      border: 1px solid #ef4444;
+      border-radius: 10px;
+      padding: 12px 18px;
+      margin-bottom: 24px;
+      color: #fee2e2;
+      align-items: center;
+      justify-content: space-between;
+      animation: alertGlow 2s infinite ease-in-out;
+    }
+
+    @keyframes alertGlow {
+      0%, 100% { box-shadow: 0 0 15px rgba(239, 68, 68, 0.4); }
+      50% { box-shadow: 0 0 25px rgba(239, 68, 68, 0.7); }
+    }
+
+    /* --- TOGGLE DE VISÃO (SALAS VS DISPOSITIVOS) --- */
+    .view-toggle-group {
+      display: flex;
+      background: #090d16;
+      padding: 3px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      gap: 3px;
+    }
+    .view-toggle-btn {
+      padding: 5px 14px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-muted);
+      border-radius: 6px;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .view-toggle-btn:hover { color: white; }
+    .view-toggle-btn.active {
+      background: #1e293b;
+      color: #60a5fa;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+
+    /* --- GRID & CARDS DE SALAS (VISÃO EXECUTIVA RESUMIDA) --- */
+    .rooms-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 20px;
+    }
+
+    .room-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+      cursor: pointer;
+      position: relative;
+    }
+    .room-card:hover {
+      transform: translateY(-3px);
+      border-color: #3b82f6;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+    }
+
+    .room-card.status-ok {
+      border-color: rgba(16, 185, 129, 0.35);
+    }
+    .room-card.status-warning {
+      border-color: rgba(245, 158, 11, 0.6);
+      background: linear-gradient(180deg, rgba(245, 158, 11, 0.08) 0%, var(--bg-card) 100%);
+    }
+    .room-card.status-critical {
+      border-color: rgba(239, 68, 68, 0.7);
+      background: linear-gradient(180deg, rgba(239, 68, 68, 0.12) 0%, var(--bg-card) 100%);
+      box-shadow: 0 4px 20px var(--offline-glow);
+    }
+
+    .room-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 10px;
+      gap: 10px;
+    }
+    .room-title-area {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .room-icon-box {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      background: rgba(59, 130, 246, 0.15);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+    .room-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: white;
+      margin-bottom: 2px;
+    }
+    .room-subtitle {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .room-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .room-badge.ok {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.35);
+    }
+    .room-badge.warning {
+      background: rgba(245, 158, 11, 0.15);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.4);
+    }
+    .room-badge.critical {
+      background: rgba(239, 68, 68, 0.15);
+      color: #f87171;
+      border: 1px solid rgba(239, 68, 68, 0.45);
+    }
+
+    /* Barra de progresso da saúde da sala */
+    .room-progress-track {
+      height: 4px;
+      background: #1e293b;
+      border-radius: 2px;
+      overflow: hidden;
+      display: flex;
+      margin: 8px 0 14px;
+    }
+    .room-progress-fill.online { background: #10b981; }
+    .room-progress-fill.offline { background: #ef4444; }
+
+    /* Bullets e chips dos dispositivos na sala */
+    .room-chips-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 14px;
+      min-height: 48px;
+      align-content: flex-start;
+    }
+    .device-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 9px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      background: #151f33;
+      border: 1px solid var(--border);
+      color: #e2e8f0;
+      transition: all 0.15s;
+    }
+    .device-chip .chip-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .device-chip.chip-online .chip-dot {
+      background: #10b981;
+      box-shadow: 0 0 6px #10b981;
+    }
+    .device-chip.chip-offline {
+      border-color: rgba(239, 68, 68, 0.6);
+      background: rgba(239, 68, 68, 0.15);
+      color: #fca5a5;
+    }
+    .device-chip.chip-offline .chip-dot {
+      background: #ef4444;
+      box-shadow: 0 0 8px #ef4444;
+      animation: alertDot 1s infinite alternate;
+    }
+
+    .room-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      padding-top: 12px;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .room-open-cta {
+      color: #60a5fa;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .room-card:hover .room-open-cta {
+      color: #93c5fd;
+      transform: translateX(3px);
+      transition: transform 0.2s;
+    }
+
+    /* Banner detalhe da sala (Breadcrumb) */
+    .room-detail-banner {
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      background: #0f172a;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 20px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    /* Grid de Dispositivos */
+    .devices-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 18px;
+    }
+
+    .device-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+
+    .device-card:hover { transform: translateY(-2px); border-color: #334155; }
+
+    .device-card.status-offline {
+      border-color: rgba(239, 68, 68, 0.7);
+      background: linear-gradient(180deg, rgba(239, 68, 68, 0.1) 0%, var(--bg-card) 100%);
+      box-shadow: 0 4px 20px var(--offline-glow);
+    }
+
+    .device-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+
+    .device-name { font-size: 16px; font-weight: 700; color: white; margin-bottom: 3px; }
+    .device-ip { font-size: 13px; font-family: var(--mono); color: #60a5fa; font-weight: 600; }
+
+    /* --- BADGE DE STATUS MINIMALISTA --- */
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      cursor: default;
+    }
+
+    .status-badge .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .status-badge.online {
+      background: rgba(16, 185, 129, 0.12);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.35);
+    }
+
+    .status-badge.online .status-dot {
+      background: #10b981;
+      box-shadow: 0 0 10px #10b981, 0 0 4px #10b981;
+      animation: pulseDot 2s infinite ease-in-out;
+    }
+
+    .status-badge.offline {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.45);
+      padding: 6px 8px;
+    }
+
+    .status-badge.offline .status-dot {
+      background: #ef4444;
+      box-shadow: 0 0 12px #ef4444, 0 0 5px #ef4444;
+      animation: alertDot 1s infinite alternate ease-in-out;
+    }
+
+    .status-badge.unknown {
+      background: #1e293b;
+      border: 1px solid var(--border);
+      padding: 6px 8px;
+    }
+    .status-badge.unknown .status-dot { background: #64748b; }
+
+    @keyframes pulseDot {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.25); opacity: 0.85; }
+    }
+
+    @keyframes alertDot {
+      0% { transform: scale(0.9); opacity: 0.6; }
+      100% { transform: scale(1.35); opacity: 1; }
+    }
+
+    .device-details {
+      margin: 10px 0 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .info-row { display: flex; justify-content: space-between; }
+    .info-row span:last-child { color: var(--text-main); font-weight: 500; }
+
+    /* Timeline Uptime Bar */
+    .timeline-container {
+      margin: 8px 0 14px;
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+      padding: 8px 12px;
+    }
+
+    .timeline-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      margin-bottom: 6px;
+      color: var(--text-muted);
+    }
+
+    .timeline-bar {
+      display: flex;
+      gap: 3px;
+      height: 16px;
+      align-items: center;
+    }
+
+    .timeline-tick {
+      flex: 1;
+      height: 100%;
+      border-radius: 2px;
+      background: #1e293b;
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+
+    .timeline-tick:hover { transform: scaleY(1.3); }
+    .timeline-tick.tick-online { background: #10b981; }
+    .timeline-tick.tick-offline { background: #ef4444; }
+
+    .device-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      padding-top: 12px;
+    }
+
+    .last-check-text { font-size: 11px; color: #64748b; }
+
+    .btn-icon {
+      background: transparent;
+      padding: 4px 8px;
+      font-size: 14px;
+      color: var(--text-muted);
+      border-radius: 4px;
+      border: none;
+    }
+    .btn-icon:hover { background: #1e293b; color: white; }
+
+    /* Modais */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(5px);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .modal {
+      background: #111827;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      width: 100%;
+      max-width: 520px;
+      padding: 22px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+      max-height: 92vh;
+      overflow-y: auto;
+    }
+
+    /* Modal Largo (Horizontal sem scroll) */
+    .modal-wide {
+      max-width: 820px;
+    }
+
+    .preset-btn {
+      background: #1e293b;
+      color: #94a3b8;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .preset-btn:hover {
+      background: #273549;
+      color: #60a5fa;
+      border-color: #3b82f6;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Tooltip de Ajuda do Gmail / Senhas de App */
+    .help-tooltip-wrapper {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .help-icon-btn {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: rgba(59, 130, 246, 0.2);
+      border: 1px solid #3b82f6;
+      color: #60a5fa;
+      font-size: 11px;
+      font-weight: 800;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      line-height: 1;
+      padding: 0;
+      transition: all 0.2s;
+    }
+
+    .help-icon-btn:hover, .help-icon-btn:focus, .help-tooltip-wrapper.active .help-icon-btn {
+      background: #2563eb;
+      color: white;
+      transform: scale(1.1);
+      box-shadow: 0 0 10px rgba(59, 130, 246, 0.6);
+    }
+
+    .help-tooltip-content {
+      display: none;
+      position: absolute;
+      width: 330px;
+      max-width: 85vw;
+      background: #0b1329;
+      border: 1px solid #3b82f6;
+      border-radius: 10px;
+      padding: 14px 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.95), 0 0 15px rgba(59, 130, 246, 0.3);
+      z-index: 1200;
+      font-size: 11px;
+      line-height: 1.5;
+      color: #cbd5e1;
+      text-align: left;
+      pointer-events: auto;
+      right: 0;
+      left: auto;
+    }
+
+    /* Tooltip para baixo (Presets) - Expande para a esquerda dentro do modal */
+    .help-tooltip-wrapper.tooltip-down .help-tooltip-content {
+      top: calc(100% + 9px);
+      right: 0;
+      left: auto;
+    }
+    .help-tooltip-wrapper.tooltip-down .help-tooltip-content::after {
+      content: '';
+      position: absolute;
+      bottom: 100%;
+      right: 6px;
+      border-width: 6px;
+      border-style: solid;
+      border-color: transparent transparent #3b82f6 transparent;
+    }
+
+    /* Tooltip para cima (Campos de entrada) - Expande para a esquerda dentro do modal */
+    .help-tooltip-wrapper.tooltip-up .help-tooltip-content {
+      bottom: calc(100% + 9px);
+      right: 0;
+      left: auto;
+    }
+    .help-tooltip-wrapper.tooltip-up .help-tooltip-content::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      right: 6px;
+      border-width: 6px;
+      border-style: solid;
+      border-color: #3b82f6 transparent transparent transparent;
+    }
+
+    /* Estados de ativação por hover ou classe active (clique) */
+    .help-tooltip-wrapper:hover .help-tooltip-content,
+    .help-tooltip-wrapper.active .help-tooltip-content {
+      display: block;
+      animation: fadeInTooltip 0.18s ease-out;
+    }
+
+    @keyframes fadeInTooltip {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Mode Selector Tabs (Dinâmico vs Manual) */
+    .mode-toggle-group {
+      display: flex;
+      gap: 6px;
+      background: #0b1120;
+      padding: 4px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      margin-top: 6px;
+    }
+    .mode-tab-btn {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .mode-tab-btn:hover {
+      color: white;
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .mode-tab-btn.active.mode-dynamic {
+      background: rgba(56, 189, 248, 0.15);
+      border-color: #38bdf8;
+      color: #38bdf8;
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);
+    }
+    .mode-tab-btn.active.mode-manual {
+      background: rgba(245, 158, 11, 0.15);
+      border-color: #f59e0b;
+      color: #f59e0b;
+      box-shadow: 0 0 10px rgba(245, 158, 11, 0.2);
+    }
+
+    /* Badges de Modo no Card de Dispositivo */
+    .badge-mode {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      vertical-align: middle;
+      margin-left: 6px;
+    }
+    .badge-mode.mode-dynamic {
+      background: rgba(56, 189, 248, 0.15);
+      border: 1px solid rgba(56, 189, 248, 0.35);
+      color: #38bdf8;
+    }
+    .badge-mode.mode-manual {
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      color: #f59e0b;
+    }
+
+    .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .modal-title { font-size: 17px; font-weight: 700; }
+
+    .form-group { margin-bottom: 12px; display: flex; flex-direction: column; gap: 5px; }
+    .form-group label { font-size: 12px; font-weight: 600; color: var(--text-muted); }
+
+    input[type="text"], input[type="password"], input[type="number"], select {
+      background: #090d16;
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 13px;
+      outline: none;
+      width: 100%;
+    }
+    input:focus, select:focus { border-color: var(--border-focus); }
+
+    .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; }
+
+    .switch-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--text-muted);
+      cursor: pointer;
+    }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .grid-3 { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 14px; }
+
+    /* Tabela de Varredura */
+    .scan-table tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
+    .scan-table tbody tr:hover { background: rgba(255, 255, 255, 0.03); }
+    .scan-table td { padding: 9px 12px; }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <header>
+    <div class="brand-area">
+      <div class="logo-badge">NOC MONITOR</div>
+      <div>
+        <div class="brand-title">Painel de Videoconferência & Infraestrutura</div>
+        <div class="brand-subtitle">Monitoramento Híbrido com SQLite & Alertas de E-mail</div>
+      </div>
+    </div>
+
+    <!-- Counters -->
+    <div class="counters-bar">
+      <div class="stat-chip" style="border-color: rgba(59, 130, 246, 0.4);">
+        <div class="dot" style="background: #60a5fa;"></div>
+        <span>Salas: <b id="count-rooms">0</b></span>
+      </div>
+      <div class="stat-chip total">
+        <div class="dot"></div>
+        <span>Dispositivos: <b id="count-total">0</b></span>
+      </div>
+      <div class="stat-chip online">
+        <div class="dot"></div>
+        <span>Online: <b id="count-online">0</b></span>
+      </div>
+      <div class="stat-chip offline">
+        <div class="dot"></div>
+        <span>Offline: <b id="count-offline">0</b></span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Controls -->
+  <div class="controls-container">
+    <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+      
+      <!-- Alternador de Visão (Salas vs Todos) -->
+      <div class="view-toggle-group">
+        <button class="view-toggle-btn active" id="btn-view-rooms" onclick="setViewMode('rooms')">
+          🏢 Visão por Salas
+        </button>
+        <button class="view-toggle-btn" id="btn-view-all" onclick="setViewMode('all')">
+          📑 Todos os Dispositivos
+        </button>
+      </div>
+
+      <!-- Intervalo & Contador -->
+      <div class="interval-box">
+        <label for="interval-select" style="font-size: 12px; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; gap: 4px;">⏱️ Intervalo:</label>
+        <select id="interval-select" onchange="changeInterval(this.value)" style="width: auto; padding: 4px 8px; font-size: 12px; font-weight: 700; color: #60a5fa; background: #0f172a; border: 1px solid var(--border); border-radius: 6px; cursor: pointer;">
+          <option value="15">15s</option>
+          <option value="30">30s</option>
+          <option value="60">1m</option>
+          <option value="120">2m</option>
+          <option value="180">3m</option>
+          <option value="300">5m</option>
+          <option value="600">10m</option>
+          <option value="900">15m</option>
+        </select>
+        <div class="timer-badge" id="countdown-badge">
+          <div class="pulse-ring"></div>
+          <span id="countdown-text">Atualizando em: 15s</span>
+        </div>
+      </div>
+
+      <!-- Filtros -->
+      <div class="filter-tabs">
+        <button class="filter-tab active" onclick="setFilter('all', this)">Todos</button>
+        <button class="filter-tab" onclick="setFilter('offline', this)">🔴 Offline</button>
+        <button class="filter-tab" onclick="setFilter('online', this)">🟢 Online</button>
+      </div>
+
+    </div>
+
+    <!-- Actions -->
+    <div class="btn-group">
+      <label class="switch-label">
+        <input type="checkbox" id="sound-alert" checked> 🔔 Som de Alerta
+      </label>
+      <button class="btn-secondary" id="btn-check-now" onclick="triggerCheckNow()">🔄 Checar Agora</button>
+      <button class="btn-secondary" onclick="openScannerModal()" style="border-color: #3b82f6; color: #60a5fa;">📡 Varredura de Rede</button>
+      <button class="btn-primary" onclick="openAddDeviceModal()">➕ Adicionar</button>
+      <button class="btn-secondary" onclick="openSettingsModal()">⚙️ Configurações</button>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <main>
+    <div id="critical-alert-bar">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 20px;">⚠️</span>
+        <div>
+          <b id="alert-title">Atenção: Dispositivo Offline Detectado!</b>
+          <div id="alert-subtitle" style="font-size: 13px; opacity: 0.9;">Um ou mais equipamentos de sala pararam de responder ao PING.</div>
+        </div>
+      </div>
+      <button class="btn-secondary" onclick="document.getElementById('critical-alert-bar').style.display='none'">Dispensar</button>
+    </div>
+
+    <!-- Banner de Detalhes da Sala (Navegação / Breadcrumb) -->
+    <div class="room-detail-banner" id="room-detail-banner">
+      <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+        <button class="btn-secondary" onclick="exitRoomView()" style="display: flex; align-items: center; gap: 6px; font-weight: 700; border-color: #3b82f6; color: #60a5fa;">
+          ⬅ Voltar para Todas as Salas
+        </button>
+        <div style="border-left: 1px solid var(--border); padding-left: 14px;">
+          <div style="font-size: 17px; font-weight: 700; color: white; display: flex; align-items: center; gap: 10px;">
+            <span id="detail-room-name">Nome da Sala</span>
+            <span id="detail-room-badge"></span>
+          </div>
+          <div id="detail-room-info" style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+            Carregando detalhes...
+          </div>
+        </div>
+      </div>
+      <button class="btn-primary" onclick="openAddDeviceToCurrentRoom()">➕ Adicionar Dispositivo nesta Sala</button>
+    </div>
+
+    <!-- Grid de Salas (Visão Agrupada Resumida) -->
+    <div class="rooms-grid" id="rooms-grid">
+      <!-- Injetado dinamicamente via JS -->
+    </div>
+
+    <!-- Grid de Dispositivos Individuais -->
+    <div class="devices-grid" id="devices-grid" style="display: none;">
+      <!-- Injetado dinamicamente via JS -->
+    </div>
+  </main>
+
+  <!-- Rodapé & Licença -->
+  <footer style="margin-top: auto; padding: 20px 28px; border-top: 1px solid var(--border); background: #080c14; font-size: 12px; color: var(--text-muted);">
+    <div style="max-width: 1400px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+      <div>
+        <b>Monitor NOC</b> &copy; 2026 <b>Davis Vasconcellos</b>. Todos os direitos reservados.
+      </div>
+      <div>
+        <span style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.25); color: #60a5fa; padding: 4px 10px; border-radius: 12px; font-size: 11px;">
+          Licença: Livre para Uso e Distribuição • Não Comercial • Crédito Obrigatório
+        </span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Modal: Adicionar/Editar Dispositivo com suporte a DHCP Dinâmico e IP Fixo -->
+  <div class="modal-backdrop" id="device-modal">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title" id="modal-device-title">Adicionar Dispositivo</div>
+        <button class="btn-icon" onclick="closeModal('device-modal')">✕</button>
+      </div>
+      <input type="hidden" id="edit-device-id" value="">
+      <input type="hidden" id="dev-mode" value="dynamic">
+      
+      <!-- Seletor de Modo: Dinâmico (DHCP Auto-Tracking) vs Fixo (Manual) -->
+      <div class="form-group" style="margin-bottom: 14px;">
+        <label style="display: flex; justify-content: space-between; align-items: center;">
+          <span>Modo de Endereçamento de Rede *</span>
+          <span style="font-size: 11px; color: var(--text-muted);">Como o NOC deve monitorar</span>
+        </label>
+        <div class="mode-toggle-group">
+          <button type="button" class="mode-tab-btn active mode-dynamic" id="btn-mode-dynamic" onclick="setDeviceMode('dynamic')">
+            <span>🔄 Dinâmico (DHCP Auto-Tracking)</span>
+          </button>
+          <button type="button" class="mode-tab-btn mode-manual" id="btn-mode-manual" onclick="setDeviceMode('manual')">
+            <span>📌 Fixo (IP Estático)</span>
+          </button>
+        </div>
+        <div id="mode-help-text" style="font-size: 11px; color: #38bdf8; margin-top: 5px;">
+          💡 <b>Modo Dinâmico:</b> Se o equipamento trocar de IP via DHCP, o NOC auto-localiza pelo Hostname e MAC físico, mantendo o monitoramento online sem falhas!
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="dev-ip">Endereço IP Atual ou Alvo *</label>
+        <div style="display: flex; gap: 8px;">
+          <input type="text" id="dev-ip" placeholder="Ex: 192.168.1.50">
+          <button type="button" class="btn-secondary" id="btn-detect-ip" style="white-space: nowrap; border-color: #3b82f6; color: #60a5fa;" onclick="detectIpInfo()">🔍 Checar IP</button>
+        </div>
+        <span style="font-size: 11px; color: var(--text-muted);">💡 Digite o IP e clique em <b>"Checar IP"</b> para buscar MAC físico (SendARP), Hostname e Fabricante na rede.</span>
+        
+        <!-- Feedback em tempo real da checagem do IP -->
+        <div id="detect-status-box" style="display: none; margin-top: 8px; padding: 10px 12px; border-radius: 8px; font-size: 11px;"></div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <div class="form-group">
+          <label for="dev-hostname">Nome de Rede (Hostname / DNS)</label>
+          <input type="text" id="dev-hostname" placeholder="Ex: poly-studio-x50, sala-01">
+          <span style="font-size: 10px; color: var(--text-muted);">Identificador DNS único para DHCP</span>
+        </div>
+        <div class="form-group">
+          <label for="dev-mac">Endereço MAC (Físico)</label>
+          <input type="text" id="dev-mac" placeholder="Ex: 00:E0:DB:6A:91:86">
+          <span style="font-size: 10px; color: var(--text-muted);">Usado no rastreamento Camada 2</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label for="dev-room">Sala / Grupo *</label>
+        <input type="text" id="dev-room" list="room-suggestions" placeholder="Ex: Sala Diretoria, Sala 01, Auditório">
+        <datalist id="room-suggestions"></datalist>
+        <span style="font-size: 11px; color: var(--text-muted);">💡 Selecione uma sala existente na lista ou digite um novo nome para criar uma sala.</span>
+      </div>
+
+      <div class="form-group">
+        <label for="dev-name">Nome do Dispositivo / Equipamento *</label>
+        <input type="text" id="dev-name" placeholder="Ex: Poly Studio X50, Tablet TC8, TV Samsung">
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <div class="form-group">
+          <label for="dev-model">Modelo / Fabricante</label>
+          <input type="text" id="dev-model" placeholder="Ex: Poly Studio X50, Cisco Room Kit">
+        </div>
+        <div class="form-group">
+          <label for="dev-location">Localização / Andar (Opcional)</label>
+          <input type="text" id="dev-location" placeholder="Ex: 3º Andar, Bloco B">
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeModal('device-modal')">Cancelar</button>
+        <button class="btn-primary" onclick="saveDevice()">Salvar Dispositivo</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Varredura de Rede (IP Range Scanner) -->
+  <div class="modal-backdrop" id="scanner-modal">
+    <div class="modal modal-wide" style="max-height: 85vh; display: flex; flex-direction: column;">
+      <div class="modal-header">
+        <div class="modal-title">📡 Varredura de Rede Local (Descoberta Automática)</div>
+        <button class="btn-icon" onclick="closeModal('scanner-modal')">✕</button>
+      </div>
+      
+      <div style="background: rgba(0,0,0,0.25); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <label for="scan-subnet" style="font-size: 12px; font-weight: 600; color: var(--text-muted);">Faixa / Sub-rede:</label>
+          <input type="text" id="scan-subnet" value="192.168.0." style="width: 130px; font-family: var(--mono); font-weight: 700; padding: 6px 8px;">
+          <span style="font-size: 12px; color: var(--text-muted);">(IPs de 1 a 254)</span>
+        </div>
+        <button type="button" class="btn-primary" id="btn-start-scan" onclick="startNetworkScan()">🔍 Iniciar Varredura</button>
+      </div>
+
+      <div id="scan-loading" style="display: none; text-align: center; padding: 25px; font-size: 13px; color: #60a5fa;">
+        <div class="pulse-ring" style="display: inline-block; margin-right: 6px;"></div>
+        Disparando pings simultâneos em 254 endereços... Aguarde cerca de 3 a 5 segundos.
+      </div>
+
+      <div id="scan-results-wrap" style="flex: 1; overflow-y: auto; display: none; margin-bottom: 12px; border: 1px solid var(--border); border-radius: 8px;">
+        <table class="scan-table" style="width: 100%; border-collapse: collapse; font-size: 12px; text-align: left;">
+          <thead style="background: #172033; position: sticky; top: 0; z-index: 10;">
+            <tr>
+              <th style="padding: 10px; width: 36px; text-align: center;"><input type="checkbox" id="scan-check-all" onchange="toggleSelectAllScan(this)"></th>
+              <th style="padding: 10px; width: 110px;">Endereço IP</th>
+              <th style="padding: 10px;">Nome da Sala / Equipamento</th>
+              <th style="padding: 10px; width: 180px;">Monitorar Por</th>
+              <th style="padding: 10px;">Fabricante & MAC</th>
+              <th style="padding: 10px; width: 75px;">Latência</th>
+              <th style="padding: 10px; width: 85px;">Situação</th>
+            </tr>
+          </thead>
+          <tbody id="scan-table-body">
+            <!-- Linhas injetadas via JS -->
+          </tbody>
+        </table>
+      </div>
+
+      <div class="modal-actions" style="margin-top: auto; padding-top: 10px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+        <span id="scan-selected-count" style="font-size: 12px; color: var(--text-muted); align-self: center;">0 selecionado(s)</span>
+        
+        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+          <label for="scan-batch-room" style="font-size: 12px; color: var(--text-muted); white-space: nowrap;">Atribuir à Sala:</label>
+          <input type="text" id="scan-batch-room" list="room-suggestions" placeholder="Ex: Sala 01" style="width: 150px; padding: 6px 8px; font-size: 12px;">
+          <button type="button" class="btn-secondary" onclick="closeModal('scanner-modal')">Fechar</button>
+          <button type="button" class="btn-primary" id="btn-add-selected" style="display: none;" onclick="addSelectedDiscovered()">➕ Adicionar Selecionados</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal: Configurações & E-mail (HORIZONTAL / OTIMIZADO) -->
+  <div class="modal-backdrop" id="settings-modal">
+    <div class="modal modal-wide">
+      <div class="modal-header">
+        <div class="modal-title">⚙️ Configurações Gerais & E-mail (SMTP)</div>
+        <button class="btn-icon" onclick="closeModal('settings-modal')">✕</button>
+      </div>
+
+      <!-- Linha 1: Intervalo e Ativação -->
+      <div class="grid-2" style="background: rgba(0,0,0,0.25); border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; margin-bottom: 14px; align-items: center;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <label for="cfg-interval" style="font-size: 12px; font-weight: 600; color: var(--text-muted); white-space: nowrap;">Intervalo de Verificação:</label>
+          <div style="display: flex; align-items: center; gap: 4px;">
+            <select id="cfg-interval" style="padding: 6px 10px; width: auto; font-weight: 600;">
+              <option value="15">15s (15 segundos)</option>
+              <option value="30">30s (30 segundos)</option>
+              <option value="60">1m (1 minuto)</option>
+              <option value="120">2m (2 minutos)</option>
+              <option value="180">3m (3 minutos)</option>
+              <option value="300">5m (5 minutos)</option>
+              <option value="600">10m (10 minutos)</option>
+              <option value="900">15m (15 minutos)</option>
+            </select>
+          </div>
+        </div>
+        <div style="display: flex; justify-content: flex-end;">
+          <label class="switch-label" style="background: #1e293b; padding: 6px 12px; border-radius: 20px; border: 1px solid var(--border);">
+            <input type="checkbox" id="cfg-email-enabled"> <b>Ativar Notificações por E-mail</b>
+          </label>
+        </div>
+      </div>
+
+      <!-- Barra de Atalhos Rápidos (Presets de Provedor) -->
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+        <span style="font-size: 11px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">Provedor SMTP:</span>
+        <div style="display: flex; gap: 6px; align-items: center;">
+          <button type="button" class="preset-btn" onclick="applySmtpPreset('office365')">⚡ Microsoft 365</button>
+          <div style="display: flex; align-items: center; gap: 4px;">
+            <button type="button" class="preset-btn" onclick="applySmtpPreset('gmail')">⚡ Gmail</button>
+            <div class="help-tooltip-wrapper tooltip-down">
+              <button type="button" class="help-icon-btn" onclick="toggleGmailHelp(event, this)" title="Instruções para configurar o Gmail">?</button>
+              <div class="help-tooltip-content" onclick="event.stopPropagation()">
+                <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(59, 130, 246, 0.3); padding-bottom: 6px; margin-bottom: 8px;">
+                  <div style="font-weight: 700; color: #60a5fa; font-size: 12px; display: flex; align-items: center; gap: 5px;">
+                    <span>🔑</span> Como configurar o Gmail
+                  </div>
+                  <span style="font-size: 10px; background: rgba(59, 130, 246, 0.2); color: #93c5fd; padding: 2px 6px; border-radius: 4px;">Google SMTP</span>
+                </div>
+                <p style="margin: 0 0 8px; color: #e2e8f0; font-size: 11px; line-height: 1.4;">
+                  O Google <b>não aceita sua senha comum de login</b> por motivos de segurança. É obrigatório criar uma <b>Senha de App (16 letras)</b>:
+                </p>
+                <ol style="margin: 0 0 10px 16px; padding: 0; color: #cbd5e1; font-size: 11px; display: flex; flex-direction: column; gap: 5px;">
+                  <li>Ative a <b>Verificação em 2 etapas</b> na sua Conta Google.</li>
+                  <li>
+                    Acesse o link direto:
+                    <div style="margin-top: 2px;">
+                      <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noopener" style="color: #38bdf8; text-decoration: underline; font-weight: 700;">
+                        myaccount.google.com/apppasswords ↗
+                      </a>
+                    </div>
+                  </li>
+                  <li>Dê o nome <b>Monitor NOC</b> e clique em <b>Criar</b>.</li>
+                  <li>Copie a senha de 16 letras gerada e cole no campo <b>Senha</b>.</li>
+                </ol>
+                <div style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 6px; padding: 6px 8px; color: #34d399; font-size: 10px;">
+                  💡 O monitor aceita a senha com ou sem espaços e conecta na porta 587 com TLS.
+                </div>
+              </div>
+            </div>
+          </div>
+          <button type="button" class="preset-btn" onclick="applySmtpPreset('outlook')">⚡ Outlook.com</button>
+        </div>
+      </div>
+
+      <!-- Seção Servidor SMTP (Grid 3 colunas) -->
+      <div class="grid-3" style="margin-bottom: 10px;">
+        <div class="form-group">
+          <label for="cfg-smtp-host">Servidor SMTP</label>
+          <input type="text" id="cfg-smtp-host" placeholder="smtp.office365.com ou smtp.gmail.com">
+        </div>
+        <div class="form-group">
+          <label for="cfg-smtp-port">Porta</label>
+          <input type="number" id="cfg-smtp-port" value="587">
+        </div>
+        <div class="form-group" style="justify-content: flex-end; padding-bottom: 4px;">
+          <label class="switch-label">
+            <input type="checkbox" id="cfg-smtp-tls" checked> Usar TLS / STARTTLS
+          </label>
+        </div>
+      </div>
+
+      <!-- Seção Autenticação (Grid 3 colunas para incluir Remetente) -->
+      <div class="grid-3" style="margin-bottom: 10px;">
+        <div class="form-group">
+          <label for="cfg-smtp-user">Usuário / Conta SMTP</label>
+          <input type="text" id="cfg-smtp-user" placeholder="seu-email@empresa.com">
+        </div>
+        <div class="form-group" style="position: relative;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 2px;">
+            <label for="cfg-smtp-pass" style="margin-bottom: 0;">Senha / App Password</label>
+            <div class="help-tooltip-wrapper tooltip-up">
+              <button type="button" class="help-icon-btn" onclick="toggleGmailHelp(event, this)" title="Como gerar a Senha de App no Gmail">?</button>
+              <div class="help-tooltip-content" onclick="event.stopPropagation()">
+                <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(59, 130, 246, 0.3); padding-bottom: 6px; margin-bottom: 8px;">
+                  <div style="font-weight: 700; color: #60a5fa; font-size: 12px; display: flex; align-items: center; gap: 5px;">
+                    <span>🔑</span> Senha de App no Gmail
+                  </div>
+                  <span style="font-size: 10px; background: rgba(59, 130, 246, 0.2); color: #93c5fd; padding: 2px 6px; border-radius: 4px;">Gmail / 365</span>
+                </div>
+                <p style="margin: 0 0 8px; color: #e2e8f0; font-size: 11px; line-height: 1.4;">
+                  Se estiver usando <b>Gmail</b>, não utilize a sua senha pessoal da conta. O Google exige uma <b>Senha de App</b>:
+                </p>
+                <ol style="margin: 0 0 10px 16px; padding: 0; color: #cbd5e1; font-size: 11px; display: flex; flex-direction: column; gap: 5px;">
+                  <li>Ative a <b>Verificação em 2 etapas</b> no Google.</li>
+                  <li>
+                    Acesse: 
+                    <a href="https://myaccount.google.com/apppasswords" target="_blank" rel="noopener" style="color: #38bdf8; text-decoration: underline; font-weight: 700;">
+                      myaccount.google.com/apppasswords ↗
+                    </a>
+                  </li>
+                  <li>Gere uma senha para o app <b>Monitor NOC</b>.</li>
+                  <li>Cole a senha de 16 letras aqui no campo de senha.</li>
+                </ol>
+                <div style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 6px; padding: 6px 8px; color: #34d399; font-size: 10px;">
+                  💡 O Monitor NOC limpa espaços automaticamente caso a senha seja colada agrupada.
+                </div>
+              </div>
+            </div>
+          </div>
+          <input type="password" id="cfg-smtp-pass" placeholder="Insira a senha do e-mail">
+        </div>
+        <div class="form-group">
+          <label for="cfg-smtp-from">Remetente (From - Opcional)</label>
+          <input type="text" id="cfg-smtp-from" placeholder="Deixe vazio p/ usar Usuário">
+        </div>
+      </div>
+
+      <!-- Destinatários (Largura total) -->
+      <div class="form-group" style="margin-bottom: 12px;">
+        <label for="cfg-smtp-to">Destinatários dos Alertas em Produção (separados por vírgula)</label>
+        <input type="text" id="cfg-smtp-to" placeholder="ti@empresa.com, suporte@empresa.com, diretoria@empresa.com">
+      </div>
+
+      <!-- Gatilhos de Notificação -->
+      <div style="display: flex; gap: 20px; margin-bottom: 14px; background: rgba(0,0,0,0.15); border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px;">
+        <label class="switch-label">
+          <input type="checkbox" id="cfg-alert-offline" checked> Avisar quando sala/dispositivo ficar offline
+        </label>
+        <label class="switch-label">
+          <input type="checkbox" id="cfg-alert-recovery" checked> Avisar quando sala/dispositivo retornar online
+        </label>
+      </div>
+
+      <!-- CARD DEDICADO: MODO DE TESTE DE E-MAIL -->
+      <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid rgba(59, 130, 246, 0.35); border-radius: 10px; padding: 14px 16px; margin-bottom: 14px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 6px;">
+          <div style="font-size: 13px; font-weight: 700; color: #60a5fa; display: flex; align-items: center; gap: 6px;">
+            <span style="font-size: 15px;">🧪</span> Modo de Teste de Configuração
+          </div>
+          <span style="font-size: 11px; color: var(--text-muted);">Teste agora a conexão e credenciais sem precisar salvar previamente</span>
+        </div>
+
+        <div style="display: flex; gap: 10px; align-items: flex-end; flex-wrap: wrap;">
+          <div style="flex: 1; min-width: 250px;" class="form-group" style="margin-bottom: 0;">
+            <label for="cfg-test-email-target" style="font-size: 11px; font-weight: 600; color: #cbd5e1;">Destinatário do Teste:</label>
+            <input type="text" id="cfg-test-email-target" placeholder="seu-email@empresa.com (deixe vazio para usar a lista acima)">
+          </div>
+          <button type="button" id="btn-test-email" class="btn-primary" onclick="testEmailConfig()" style="background: #2563eb; height: 38px; white-space: nowrap; padding: 0 16px; display: inline-flex; align-items: center; gap: 8px;">
+            <span id="btn-test-email-icon">📨</span>
+            <span id="btn-test-email-text">Enviar E-mail de Teste</span>
+          </button>
+        </div>
+
+        <!-- Feedback inline em tempo real -->
+        <div id="email-test-feedback" style="display: none; margin-top: 12px; border-radius: 8px; font-size: 12px; line-height: 1.45;"></div>
+      </div>
+
+      <!-- Rodapé de Ações do Modal -->
+      <div style="display: flex; justify-content: flex-end; align-items: center; border-top: 1px solid var(--border); padding-top: 14px; gap: 10px;">
+        <button type="button" class="btn-secondary" onclick="closeModal('settings-modal')">Cancelar</button>
+        <button type="button" class="btn-primary" onclick="saveSettings()">💾 Salvar Configurações</button>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    let devices = [];
+    let currentView = 'rooms'; // 'rooms' ou 'all'
+    let activeRoom = null;      // nome da sala filtrada no modo drill-down
+    let currentFilter = 'all';  // 'all', 'offline', 'online'
+    let pollInterval = 15;
+    let countdown = 15;
+    let timer = null;
+    let discoveredList = [];
+
+    window.addEventListener('DOMContentLoaded', () => {
+      fetchSettings();
+      fetchDevices();
+      startCountdown();
+    });
+
+    // --- CARREGAMENTO DE DADOS ---
+    async function fetchDevices() {
+      try {
+        const res = await fetch('/api/devices');
+        const data = await res.json();
+        
+        let newlyOffline = false;
+        data.forEach(newD => {
+          const oldD = devices.find(d => d.id === newD.id);
+          if (oldD && oldD.last_status === 'online' && newD.last_status === 'offline') {
+            newlyOffline = true;
+          }
+        });
+
+        devices = data;
+        renderApp();
+
+        if (newlyOffline && document.getElementById('sound-alert').checked) {
+          playAlertSound();
+        }
+      } catch (err) {
+        console.error("Erro ao buscar dispositivos:", err);
+      }
+    }
+
+    async function triggerCheckNow() {
+      const btn = document.getElementById('btn-check-now');
+      const originalText = btn ? btn.innerHTML : '🔄 Checar Agora';
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '🔄 Checando...';
+      }
+      try {
+        const res = await fetch('/api/devices/check-now', { method: 'POST' });
+        if (res.ok) {
+          const data = await res.json();
+          devices = data;
+          renderApp();
+          countdown = pollInterval;
+          const badge = document.getElementById('countdown-text');
+          if (badge) badge.innerText = `Atualizando em: ${formatCountdown(countdown)}`;
+        } else {
+          await fetchDevices();
+        }
+      } catch (e) {
+        console.error("Erro ao checar agora:", e);
+        await fetchDevices();
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = originalText;
+        }
+      }
+    }
+
+    async function fetchTimeline(devId) {
+      try {
+        const res = await fetch(`/api/devices/${devId}/history`);
+        const history = await res.json();
+        const bar = document.getElementById(`timeline-bar-${devId}`);
+        if (!bar) return;
+
+        bar.innerHTML = '';
+        if (history.length === 0) {
+          bar.innerHTML = '<span style="font-size: 11px; color: #64748b;">Sem histórico recente</span>';
+          return;
+        }
+
+        history.forEach(item => {
+          const tick = document.createElement('div');
+          const isOnline = item.is_online === 1;
+          tick.className = `timeline-tick ${isOnline ? 'tick-online' : 'tick-offline'}`;
+          tick.title = `${item.timestamp} | ${isOnline ? 'Online (' + item.latency_ms + 'ms)' : 'Offline'}`;
+          bar.appendChild(tick);
+        });
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    // --- AGRUPAMENTO POR SALAS ---
+    function getRoomName(d) {
+      if (d.room && d.room.trim()) return d.room.trim();
+      if (d.location && d.location.trim()) return d.location.trim();
+      return 'Dispositivos Gerais';
+    }
+
+    function groupDevicesByRoom(deviceList) {
+      const roomMap = new Map();
+      deviceList.forEach(d => {
+        const room = getRoomName(d);
+        if (!roomMap.has(room)) {
+          roomMap.set(room, {
+            name: room,
+            location: d.location || '',
+            devices: [],
+            onlineCount: 0,
+            offlineCount: 0,
+            unknownCount: 0,
+            totalLatency: 0,
+            onlineLatencyCount: 0
+          });
+        }
+        const r = roomMap.get(room);
+        r.devices.push(d);
+        if (d.last_status === 'online') {
+          r.onlineCount++;
+          if (d.last_latency && d.last_latency > 0) {
+            r.totalLatency += d.last_latency;
+            r.onlineLatencyCount++;
+          }
+        } else if (d.last_status === 'offline') {
+          r.offlineCount++;
+        } else {
+          r.unknownCount++;
+        }
+        if (!r.location && d.location) {
+          r.location = d.location;
+        }
+      });
+      return Array.from(roomMap.values());
+    }
+
+    function updateRoomSuggestions(roomGroups) {
+      const datalist = document.getElementById('room-suggestions');
+      if (!datalist) return;
+      const currentRooms = Array.from(new Set(devices.map(d => getRoomName(d)))).filter(Boolean).sort();
+      datalist.innerHTML = currentRooms.map(r => `<option value="${escapeHtml(r)}">`).join('');
+    }
+
+    // --- CONTROLE DE VISÃO & DRILL-DOWN ---
+    function setViewMode(mode) {
+      currentView = mode;
+      activeRoom = null;
+      document.getElementById('btn-view-rooms').classList.toggle('active', mode === 'rooms');
+      document.getElementById('btn-view-all').classList.toggle('active', mode === 'all');
+      renderApp();
+    }
+
+    function enterRoomView(roomName) {
+      activeRoom = roomName;
+      currentView = 'rooms';
+      renderApp();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function exitRoomView() {
+      activeRoom = null;
+      renderApp();
+    }
+
+    function openAddDeviceToCurrentRoom() {
+      openAddDeviceModal(activeRoom);
+    }
+
+    // --- RENDERIZADOR PRINCIPAL (APP ORCHESTRATOR) ---
+    function renderApp() {
+      const roomGroups = groupDevicesByRoom(devices);
+      updateRoomSuggestions(roomGroups);
+
+      let onlineCount = 0;
+      let offlineCount = 0;
+      devices.forEach(d => {
+        if (d.last_status === 'online') onlineCount++;
+        if (d.last_status === 'offline') offlineCount++;
+      });
+
+      document.getElementById('count-total').innerText = devices.length;
+      document.getElementById('count-online').innerText = onlineCount;
+      document.getElementById('count-offline').innerText = offlineCount;
+      document.getElementById('count-rooms').innerText = roomGroups.length;
+
+      if (offlineCount > 0) {
+        document.getElementById('critical-alert-bar').style.display = 'flex';
+        document.getElementById('alert-title').innerText = `Atenção: ${offlineCount} dispositivo(s) offline!`;
+      } else {
+        document.getElementById('critical-alert-bar').style.display = 'none';
+      }
+
+      const roomsGrid = document.getElementById('rooms-grid');
+      const devicesGrid = document.getElementById('devices-grid');
+      const roomBanner = document.getElementById('room-detail-banner');
+
+      if (currentView === 'rooms' && !activeRoom) {
+        // 1. DASHBOARD DE SALAS
+        roomsGrid.style.display = 'grid';
+        devicesGrid.style.display = 'none';
+        roomBanner.style.display = 'none';
+        renderRooms(roomGroups);
+      } else if (currentView === 'rooms' && activeRoom) {
+        // 2. DETALHE DA SALA (DRILL-DOWN)
+        roomsGrid.style.display = 'none';
+        devicesGrid.style.display = 'grid';
+        roomBanner.style.display = 'flex';
+
+        const selectedRoom = roomGroups.find(r => r.name === activeRoom) || {
+          name: activeRoom,
+          devices: devices.filter(d => getRoomName(d) === activeRoom),
+          onlineCount: 0,
+          offlineCount: 0,
+          location: ''
+        };
+
+        document.getElementById('detail-room-name').innerText = selectedRoom.name;
+        const badgeEl = document.getElementById('detail-room-badge');
+        const isAllOnline = selectedRoom.offlineCount === 0 && (selectedRoom.unknownCount || 0) === 0 && selectedRoom.devices.length > 0;
+        const isCritical = selectedRoom.offlineCount > 0 && selectedRoom.onlineCount === 0;
+        const isWarning = selectedRoom.offlineCount > 0 && selectedRoom.onlineCount > 0;
+        const isUnknown = selectedRoom.onlineCount === 0 && selectedRoom.offlineCount === 0 && (selectedRoom.unknownCount || 0) > 0;
+
+        if (isAllOnline) {
+          badgeEl.className = 'room-badge ok';
+          badgeEl.innerHTML = `🟢 ${selectedRoom.onlineCount}/${selectedRoom.devices.length} Online`;
+        } else if (isCritical) {
+          badgeEl.className = 'room-badge critical';
+          badgeEl.innerHTML = `🔴 Inoperante (${selectedRoom.offlineCount} Offline)`;
+        } else if (isWarning) {
+          badgeEl.className = 'room-badge warning';
+          badgeEl.innerHTML = `🟡 ${selectedRoom.onlineCount}/${selectedRoom.devices.length} Online • ${selectedRoom.offlineCount} Offline`;
+        } else {
+          badgeEl.className = 'room-badge warning';
+          badgeEl.style.background = 'rgba(59, 130, 246, 0.15)';
+          badgeEl.style.color = '#60a5fa';
+          badgeEl.innerHTML = `⚪ Verificando (${selectedRoom.devices.length} equipamentos)`;
+        }
+
+        const locText = selectedRoom.location ? ` • Local: ${selectedRoom.location}` : '';
+        document.getElementById('detail-room-info').innerText = `${selectedRoom.devices.length} equipamento(s) cadastrado(s)${locText}`;
+
+        renderDevicesGrid(selectedRoom.devices);
+      } else {
+        // 3. TODOS OS DISPOSITIVOS (LISTA COMPLETA)
+        roomsGrid.style.display = 'none';
+        devicesGrid.style.display = 'grid';
+        roomBanner.style.display = 'none';
+        renderDevicesGrid(devices);
+      }
+    }
+
+    // --- RENDERIZAÇÃO DOS CARDS DE SALAS ---
+    function renderRooms(roomGroups) {
+      const grid = document.getElementById('rooms-grid');
+      grid.innerHTML = '';
+
+      const filteredRooms = roomGroups.filter(r => {
+        if (currentFilter === 'offline') return r.offlineCount > 0;
+        if (currentFilter === 'online') return r.offlineCount === 0 && r.devices.length > 0;
+        return true;
+      });
+
+      if (filteredRooms.length === 0) {
+        grid.innerHTML = `
+          <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; background: var(--bg-card); border: 1px dashed var(--border); border-radius: 16px;">
+            <div style="font-size: 32px; margin-bottom: 12px;">🏢</div>
+            <h3 style="color: white; margin-bottom: 6px;">Nenhuma sala encontrada</h3>
+            <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 18px;">
+              ${currentFilter !== 'all' ? 'Nenhuma sala atende ao filtro selecionado.' : 'Cadastre seu primeiro equipamento e agrupe em uma sala.'}
+            </p>
+            <button class="btn-primary" onclick="openAddDeviceModal()">➕ Cadastrar Dispositivo</button>
+          </div>
+        `;
+        return;
+      }
+
+      filteredRooms.forEach(r => {
+        const card = document.createElement('div');
+        const total = r.devices.length;
+        const isAllOnline = r.offlineCount === 0 && (r.unknownCount || 0) === 0 && total > 0;
+        const isCritical = r.offlineCount > 0 && r.onlineCount === 0;
+        const isWarning = r.offlineCount > 0 && r.onlineCount > 0;
+        const isUnknown = r.onlineCount === 0 && r.offlineCount === 0 && (r.unknownCount || 0) > 0;
+
+        let statusClass = 'status-ok';
+        let badgeHtml = `<span class="room-badge ok">🟢 ${r.onlineCount}/${total} Online</span>`;
+
+        if (isCritical) {
+          statusClass = 'status-critical';
+          badgeHtml = `<span class="room-badge critical">🔴 ${r.offlineCount} Offline (Inoperante)</span>`;
+        } else if (isWarning) {
+          statusClass = 'status-warning';
+          badgeHtml = `<span class="room-badge warning">🟡 ${r.onlineCount}/${total} Online • ${r.offlineCount} Off</span>`;
+        } else if (isUnknown) {
+          statusClass = 'status-warning';
+          badgeHtml = `<span class="room-badge warning" style="background: rgba(59, 130, 246, 0.15); color: #60a5fa; border-color: rgba(59, 130, 246, 0.3);">⚪ Verificando status...</span>`;
+        }
+
+        const onlinePct = total > 0 ? (r.onlineCount / total) * 100 : 0;
+        const offlinePct = total > 0 ? (r.offlineCount / total) * 100 : 0;
+
+        let chipsHtml = '';
+        r.devices.forEach(dev => {
+          const isOnline = dev.last_status === 'online';
+          chipsHtml += `
+            <div class="device-chip ${isOnline ? 'chip-online' : 'chip-offline'}" title="${escapeHtml(dev.name)} (${escapeHtml(dev.ip)}) - ${isOnline ? 'Online (' + dev.last_latency + 'ms)' : 'Offline'}">
+              <span class="chip-dot"></span>
+              <span>${escapeHtml(dev.name || dev.ip)}</span>
+            </div>
+          `;
+        });
+
+        const avgLat = r.onlineLatencyCount > 0 ? Math.round(r.totalLatency / r.onlineLatencyCount) : 0;
+        const latText = avgLat > 0 ? `⚡ Latência Média: ${avgLat} ms` : (total > 0 ? 'Aguardando verificação' : 'Sem equipamentos');
+
+        card.className = `room-card ${statusClass}`;
+        card.innerHTML = `
+          <div>
+            <div class="room-header">
+              <div class="room-title-area">
+                <div class="room-icon-box">🏢</div>
+                <div>
+                  <div class="room-title">${escapeHtml(r.name)}</div>
+                  <div class="room-subtitle">${escapeHtml(r.location || (total + ' dispositivo(s) cadastrado(s)'))}</div>
+                </div>
+              </div>
+              ${badgeHtml}
+            </div>
+
+            <div class="room-progress-track">
+              <div class="room-progress-fill online" style="width: ${onlinePct}%;"></div>
+              <div class="room-progress-fill offline" style="width: ${offlinePct}%;"></div>
+            </div>
+
+            <div class="room-chips-list">
+              ${chipsHtml}
+            </div>
+          </div>
+
+          <div class="room-footer">
+            <span>${latText}</span>
+            <span class="room-open-cta">Ver Sala (${total}) ➔</span>
+          </div>
+        `;
+
+        card.onclick = () => enterRoomView(r.name);
+        grid.appendChild(card);
+      });
+    }
+
+    // --- RENDERIZAÇÃO DOS DISPOSITIVOS INDIVIDUAIS ---
+    function renderDevicesGrid(deviceList) {
+      const grid = document.getElementById('devices-grid');
+      grid.innerHTML = '';
+
+      const filtered = deviceList.filter(d => {
+        if (currentFilter === 'offline') return d.last_status === 'offline';
+        if (currentFilter === 'online') return d.last_status === 'online';
+        return true;
+      });
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `
+          <div style="grid-column: 1 / -1; text-align: center; padding: 50px 20px; background: var(--bg-card); border: 1px dashed var(--border); border-radius: 14px;">
+            <h4 style="color: white; margin-bottom: 6px;">Nenhum dispositivo encontrado</h4>
+            <p style="color: var(--text-muted); font-size: 13px;">Nenhum equipamento atende ao filtro ou sala selecionada.</p>
+          </div>
+        `;
+        return;
+      }
+
+      filtered.forEach(d => {
+        const isOnline = d.last_status === 'online';
+        const isOffline = d.last_status === 'offline';
+        const card = document.createElement('div');
+        card.className = `device-card ${isOffline ? 'status-offline' : ''}`;
+
+        let badgeHtml = '';
+        if (isOnline) {
+          badgeHtml = `
+            <div class="status-badge online" title="Status: Online (${d.last_latency}ms)">
+              <span class="status-dot"></span>
+              <span>${d.last_latency ? d.last_latency + ' ms' : ''}</span>
+            </div>
+          `;
+        } else if (isOffline) {
+          badgeHtml = `
+            <div class="status-badge offline" title="Status: Offline (Sem resposta)">
+              <span class="status-dot"></span>
+            </div>
+          `;
+        } else {
+          badgeHtml = `
+            <div class="status-badge unknown" title="Verificando status...">
+              <span class="status-dot"></span>
+            </div>
+          `;
+        }
+
+        card.innerHTML = `
+          <div>
+            <div class="device-header">
+              <div>
+                <div class="device-name">${escapeHtml(d.name)}</div>
+                <div class="device-ip">
+                  ${escapeHtml(d.ip)}
+                  ${d.mode === 'manual' 
+                    ? '<span class="badge-mode mode-manual" title="Modo Fixo / Estático: Monitora estritamente este IP">📌 FIXO</span>' 
+                    : '<span class="badge-mode mode-dynamic" title="Modo Dinâmico: Auto-rastreia IP por Hostname e MAC físico (DHCP)">🔄 DHCP</span>'
+                  }
+                </div>
+              </div>
+              ${badgeHtml}
+            </div>
+
+            <div class="device-details">
+              <div class="info-row">
+                <span>Sala / Grupo:</span>
+                <span style="color: #60a5fa; font-weight: 600;">${escapeHtml(getRoomName(d))}</span>
+              </div>
+              <div class="info-row">
+                <span>Modelo:</span>
+                <span>${escapeHtml(d.model || 'Dispositivo de Rede')}</span>
+              </div>
+              ${d.hostname ? `
+              <div class="info-row">
+                <span>Nome de Rede (DNS):</span>
+                <span style="font-family: var(--mono); color: #a5f3fc;">${escapeHtml(d.hostname)}</span>
+              </div>` : ''}
+              ${d.resolved_ip && d.resolved_ip !== d.ip ? `
+              <div class="info-row">
+                <span>IP Sincronizado (DHCP):</span>
+                <span style="font-family: var(--mono); color: #38bdf8; font-weight: 700;">${escapeHtml(d.resolved_ip)}</span>
+              </div>` : ''}
+              ${d.mac ? `
+              <div class="info-row">
+                <span>MAC Address:</span>
+                <span style="font-family: var(--mono); color: #93c5fd;" title="Rastreamento Camada 2 SendARP ativo">${escapeHtml(d.mac)}</span>
+              </div>` : ''}
+              ${d.location ? `
+              <div class="info-row">
+                <span>Localização:</span>
+                <span>${escapeHtml(d.location)}</span>
+              </div>` : ''}
+              <div class="info-row">
+                <span>Disponibilidade 24h:</span>
+                <span style="color: ${d.uptime_24h > 98 ? '#10b981' : (d.uptime_24h > 90 ? '#f59e0b' : '#ef4444')}; font-weight: 700;">
+                  ${d.uptime_24h}%
+                </span>
+              </div>
+              ${d.offline_since ? `
+              <div class="info-row" style="color: #f87171;">
+                <span>Inacessível desde:</span>
+                <b>${escapeHtml(d.offline_since)}</b>
+              </div>` : ''}
+            </div>
+
+            <div class="timeline-container">
+              <div class="timeline-header">
+                <span>Linha do Tempo (Recentes)</span>
+                <span>Agora</span>
+              </div>
+              <div class="timeline-bar" id="timeline-bar-${d.id}">
+                ${(d.history && d.history.length > 0)
+                  ? d.history.map(h => `<div class="timeline-tick ${h.is_online ? 'tick-online' : 'tick-offline'}" title="${escapeHtml(h.timestamp)} - ${h.is_online ? 'Online (' + h.latency_ms + 'ms)' : 'Offline'}"></div>`).join('')
+                  : '<span style="font-size: 11px; color: #64748b;">Sem histórico recente</span>'
+                }
+              </div>
+            </div>
+          </div>
+
+          <div class="device-footer">
+            <span class="last-check-text">${d.last_check ? 'Último ping às ' + d.last_check : 'Aguardando'}</span>
+            <div style="display: flex; align-items: center; gap: 4px;">
+              ${d.mac ? `<button class="btn-icon" title="Rastrear e auto-localizar IP na rede pelo MAC (DHCP)" style="color: #60a5fa;" onclick="autoLocateDevice(${d.id}, '${escapeHtml(d.name)}')">🔍 Localizar</button>` : ''}
+              <button class="btn-icon" title="Editar" onclick="openEditDeviceModal(${d.id})">✏️</button>
+              <button class="btn-icon" title="Excluir" onclick="deleteDevice(${d.id})">🗑️</button>
+            </div>
+          </div>
+        `;
+        grid.appendChild(card);
+        if (!d.history) {
+          fetchTimeline(d.id);
+        }
+      });
+    }
+
+    // --- TIMER REGRESSIVO & CONTROLE DE INTERVALO ---
+    function formatCountdown(sec) {
+      if (sec < 60) return `${sec}s`;
+      const m = Math.floor(sec / 60);
+      const s = sec % 60;
+      return s > 0 ? `${m}m ${s}s` : `${m}m`;
+    }
+
+    function startCountdown() {
+      if (timer) clearInterval(timer);
+      timer = setInterval(async () => {
+        countdown--;
+        if (countdown <= 0) {
+          countdown = pollInterval;
+          const badge = document.getElementById('countdown-text');
+          if (badge) badge.innerText = `Sincronizando...`;
+          await fetchDevices();
+        }
+        const badge = document.getElementById('countdown-text');
+        if (badge) badge.innerText = `Atualizando em: ${formatCountdown(countdown)}`;
+      }, 1000);
+    }
+
+    async function changeInterval(val) {
+      const newInterval = parseInt(val) || 15;
+      pollInterval = newInterval;
+      countdown = pollInterval;
+
+      const selTop = document.getElementById('interval-select');
+      if (selTop) selTop.value = String(newInterval);
+
+      const selCfg = document.getElementById('cfg-interval');
+      if (selCfg) selCfg.value = String(newInterval);
+
+      const badge = document.getElementById('countdown-text');
+      if (badge) badge.innerText = `Atualizando em: ${formatCountdown(countdown)}`;
+
+      // Salva no backend para sincronizar o intervalo de ping em tempo real
+      try {
+        await fetch('/api/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ping_interval: String(newInterval) })
+        });
+      } catch (err) {
+        console.warn('Erro ao atualizar intervalo:', err);
+      }
+    }
+
+    // --- VARREDURA DE REDE LOCAL (IP RANGE SCANNER) ---
+    async function openScannerModal() {
+      try {
+        const res = await fetch('/api/network/subnet');
+        const data = await res.json();
+        if (data.subnet) {
+          document.getElementById('scan-subnet').value = data.subnet;
+        }
+      } catch (e) {}
+
+      document.getElementById('scan-results-wrap').style.display = 'none';
+      document.getElementById('scan-loading').style.display = 'none';
+      document.getElementById('btn-add-selected').style.display = 'none';
+      document.getElementById('scan-selected-count').innerText = '0 selecionado(s)';
+      openModal('scanner-modal');
+    }
+
+    async function startNetworkScan() {
+      const subnet = document.getElementById('scan-subnet').value.trim();
+      if (!subnet) {
+        alert("Informe a sub-rede (ex: 192.168.0.).");
+        return;
+      }
+
+      const btn = document.getElementById('btn-start-scan');
+      btn.disabled = true;
+      btn.innerText = "Varrendo...";
+      document.getElementById('scan-loading').style.display = 'block';
+      document.getElementById('scan-results-wrap').style.display = 'none';
+
+      try {
+        const res = await fetch('/api/network/scan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ subnet })
+        });
+        const data = await res.json();
+        discoveredList = data.devices || [];
+
+        renderScanResults();
+      } catch (err) {
+        alert("Erro na varredura: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = "🔍 Iniciar Varredura";
+        document.getElementById('scan-loading').style.display = 'none';
+      }
+    }
+
+    function renderScanResults() {
+      const tbody = document.getElementById('scan-table-body');
+      tbody.innerHTML = '';
+
+      if (discoveredList.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 25px; color: #94a3b8;">Nenhum dispositivo respondeu ao ping nessa sub-rede.</td></tr>';
+        document.getElementById('scan-results-wrap').style.display = 'block';
+        return;
+      }
+
+      discoveredList.forEach((d, idx) => {
+        const tr = document.createElement('tr');
+        const isAdded = d.already_added;
+        const defaultName = d.hostname || `Dispositivo ${d.ip}`;
+
+        let targetSelector = `<span style="font-family: var(--mono); color: #94a3b8; font-size: 11px;">IP Fixo</span>`;
+        if (d.hostname) {
+          targetSelector = `
+            <select class="scan-target-type" data-idx="${idx}" style="padding: 4px 6px; font-size: 11px; background: #090d16; border: 1px solid var(--border); border-radius: 4px; color: #60a5fa; width: 100%;">
+              <option value="hostname" selected>Hostname (${escapeHtml(d.hostname)}) [DHCP]</option>
+              <option value="ip">IP Fixo (${escapeHtml(d.ip)})</option>
+            </select>
+          `;
+        }
+
+        tr.innerHTML = `
+          <td style="text-align: center;">
+            <input type="checkbox" class="scan-item-chk" data-idx="${idx}" ${isAdded ? 'disabled' : 'checked'} onchange="updateSelectedCount()">
+          </td>
+          <td style="font-family: var(--mono); font-weight: 700; color: #60a5fa;">${escapeHtml(d.ip)}</td>
+          <td>
+            <input type="text" class="scan-item-name" data-idx="${idx}" value="${escapeHtml(defaultName)}" 
+                   placeholder="Ex: Poly Studio X50"
+                   style="padding: 4px 8px; font-size: 12px; background: #090d16; border: 1px solid var(--border); border-radius: 4px; color: white; width: 100%;">
+          </td>
+          <td>${targetSelector}</td>
+          <td>${escapeHtml(d.vendor || 'Desconhecido')} ${d.mac ? '<br><small style="color: #64748b; font-family: var(--mono);">' + d.mac + '</small>' : ''}</td>
+          <td style="color: #34d399; font-weight: 600;">${d.latency} ms</td>
+          <td>${isAdded ? '<span style="color: #64748b; font-size: 11px;">Já cadastrado</span>' : '<span style="color: #10b981; font-weight: 700; font-size: 11px;">● Novo</span>'}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      document.getElementById('scan-results-wrap').style.display = 'block';
+      document.getElementById('btn-add-selected').style.display = 'inline-flex';
+      updateSelectedCount();
+    }
+
+    function toggleSelectAllScan(master) {
+      document.querySelectorAll('.scan-item-chk:not([disabled])').forEach(chk => {
+        chk.checked = master.checked;
+      });
+      updateSelectedCount();
+    }
+
+    function updateSelectedCount() {
+      const selected = document.querySelectorAll('.scan-item-chk:checked:not([disabled])').length;
+      document.getElementById('scan-selected-count').innerText = `${selected} selecionado(s)`;
+      document.getElementById('btn-add-selected').disabled = selected === 0;
+    }
+
+    async function addSelectedDiscovered() {
+      const selectedBoxes = document.querySelectorAll('.scan-item-chk:checked:not([disabled])');
+      if (selectedBoxes.length === 0) return;
+
+      const batchRoom = (document.getElementById('scan-batch-room') ? document.getElementById('scan-batch-room').value.trim() : '') || 'Rede Local';
+
+      const itemsToAdd = [];
+      selectedBoxes.forEach(chk => {
+        const idx = parseInt(chk.dataset.idx);
+        const d = discoveredList[idx];
+        const nameInput = document.querySelector(`.scan-item-name[data-idx="${idx}"]`);
+        const targetTypeSelect = document.querySelector(`.scan-target-type[data-idx="${idx}"]`);
+
+        const customName = nameInput ? nameInput.value.trim() : '';
+        const targetType = targetTypeSelect ? targetTypeSelect.value : 'ip';
+        const targetAddr = (targetType === 'hostname' && d.hostname) ? d.hostname : d.ip;
+
+        if (d) {
+          itemsToAdd.push({
+            name: customName || d.hostname || `Dispositivo ${d.ip}`,
+            ip: targetAddr,
+            room: batchRoom,
+            location: batchRoom,
+            mac: d.mac || '',
+            model: d.model || d.vendor || '',
+            hostname: d.hostname || '',
+            mode: 'dynamic',
+            latency: d.latency || 1.0
+          });
+        }
+      });
+
+      try {
+        const res = await fetch('/api/devices/batch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(itemsToAdd)
+        });
+        const json = await res.json();
+        alert(`✅ Sucesso! ${json.added} dispositivo(s) adicionado(s) à sala "${batchRoom}".`);
+        closeModal('scanner-modal');
+        await triggerCheckNow();
+      } catch (e) {
+        alert("Erro ao adicionar dispositivos: " + e.message);
+      }
+    }
+
+    // --- CONTROLE DE MODO DO DISPOSITIVO (DINÂMICO VS MANUAL) ---
+    function setDeviceMode(mode) {
+      const modeVal = mode === 'manual' ? 'manual' : 'dynamic';
+      const hiddenInput = document.getElementById('dev-mode');
+      if (hiddenInput) hiddenInput.value = modeVal;
+
+      const btnDyn = document.getElementById('btn-mode-dynamic');
+      const btnMan = document.getElementById('btn-mode-manual');
+      const helpText = document.getElementById('mode-help-text');
+
+      if (modeVal === 'dynamic') {
+        if (btnDyn) btnDyn.classList.add('active');
+        if (btnMan) btnMan.classList.remove('active');
+        if (helpText) {
+          helpText.style.color = '#38bdf8';
+          helpText.innerHTML = '💡 <b>Modo Dinâmico:</b> Se o equipamento trocar de IP via DHCP, o NOC auto-localiza pelo Hostname e MAC físico, mantendo o monitoramento online sem falhas!';
+        }
+      } else {
+        if (btnMan) btnMan.classList.add('active');
+        if (btnDyn) btnDyn.classList.remove('active');
+        if (helpText) {
+          helpText.style.color = '#f59e0b';
+          helpText.innerHTML = '📌 <b>Modo Fixo:</b> O monitoramento fica restrito exclusivamente ao IP configurado acima. Não realiza auto-recuperação por MAC.';
+        }
+      }
+    }
+
+    // --- AUTO DETECÇÃO INDIVIDUAL NO CADASTRO (SENDARP & HOSTNAME) ---
+    async function detectIpInfo() {
+      const target = document.getElementById('dev-ip').value.trim();
+      const statusBox = document.getElementById('detect-status-box');
+      const btn = document.getElementById('btn-detect-ip');
+
+      if (!target) {
+        alert("Por favor, digite o IP ou Hostname para testar a conectividade.");
+        document.getElementById('dev-ip').focus();
+        return;
+      }
+
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '⏳ Checando...';
+      }
+
+      statusBox.style.display = 'block';
+      statusBox.style.background = 'rgba(59, 130, 246, 0.12)';
+      statusBox.style.border = '1px solid rgba(59, 130, 246, 0.35)';
+      statusBox.style.color = '#93c5fd';
+      statusBox.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="display: inline-block; animation: spin 1s linear infinite;">🔄</span>
+          <span>Sondando Camada 2 (SendARP nativo), ICMP Ping e portas de serviço...</span>
+        </div>
+      `;
+
+      try {
+        const res = await fetch(`/api/devices/detect?ip=${encodeURIComponent(target)}`);
+        const data = await res.json();
+
+        if (data.hostname) {
+          const hField = document.getElementById('dev-hostname');
+          if (hField) hField.value = data.hostname;
+          if (!document.getElementById('dev-name').value) {
+            document.getElementById('dev-name').value = data.hostname;
+          }
+        }
+        if (data.mac) {
+          const mField = document.getElementById('dev-mac');
+          if (mField) mField.value = data.mac;
+        }
+        if (data.vendor || data.model) {
+          const modField = document.getElementById('dev-model');
+          if (modField && !modField.value) {
+            modField.value = data.model || data.vendor;
+          }
+        }
+
+        const isOnline = data.is_online;
+        const hasMac = Boolean(data.mac);
+        const hasHost = Boolean(data.hostname);
+
+        if (isOnline || hasMac) {
+          statusBox.style.background = 'rgba(16, 185, 129, 0.12)';
+          statusBox.style.border = '1px solid rgba(16, 185, 129, 0.4)';
+          statusBox.style.color = '#34d399';
+          
+          let details = [];
+          if (isOnline) details.push(`<b>Online</b> (${data.latency}ms)`);
+          if (data.vendor) details.push(`Fabricante: <b>${data.vendor}</b>`);
+          if (hasMac) details.push(`MAC: <code style="color:#93c5fd;">${data.mac}</code>`);
+          if (hasHost) details.push(`Hostname: <b style="color:#a5f3fc;">${data.hostname}</b>`);
+
+          let dhcpNote = '';
+          if (hasMac) {
+            dhcpNote = '<div style="margin-top: 4px; color: #a7f3d0; font-size: 10px;">🛡️ <b>Pronto para DHCP:</b> MAC físico capturado via SendARP. Caso o IP mude no futuro, o monitoramento continuará ativo automaticamente!</div>';
+          }
+
+          statusBox.innerHTML = `
+            <div style="display: flex; align-items: flex-start; gap: 8px;">
+              <span style="font-size: 15px;">✅</span>
+              <div>
+                <div>${details.join(' • ')}</div>
+                ${dhcpNote}
+              </div>
+            </div>
+          `;
+        } else {
+          statusBox.style.background = 'rgba(239, 68, 68, 0.12)';
+          statusBox.style.border = '1px solid rgba(239, 68, 68, 0.35)';
+          statusBox.style.color = '#f87171';
+          statusBox.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span>⚠️</span>
+              <span>Nenhum retorno recebido de <b>${escapeHtml(target)}</b> (Sem resposta ao Ping ou SendARP na sub-rede local).</span>
+            </div>
+          `;
+        }
+      } catch (err) {
+        statusBox.style.background = 'rgba(239, 68, 68, 0.12)';
+        statusBox.style.border = '1px solid rgba(239, 68, 68, 0.35)';
+        statusBox.style.color = '#f87171';
+        statusBox.innerHTML = `Erro ao checar alvo na rede: ${err.message}`;
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          btn.innerHTML = '🔍 Checar IP';
+        }
+      }
+    }
+
+    // --- GERENCIAMENTO DE DISPOSITIVOS ---
+    function openAddDeviceModal(prefilledRoom = '') {
+      document.getElementById('edit-device-id').value = '';
+      document.getElementById('modal-device-title').innerText = 'Adicionar Dispositivo';
+      setDeviceMode('dynamic');
+      document.getElementById('dev-room').value = prefilledRoom || activeRoom || '';
+      document.getElementById('dev-name').value = '';
+      document.getElementById('dev-ip').value = '';
+      document.getElementById('dev-hostname').value = '';
+      document.getElementById('dev-model').value = '';
+      document.getElementById('dev-mac').value = '';
+      document.getElementById('dev-location').value = '';
+      const box = document.getElementById('detect-status-box');
+      if (box) { box.style.display = 'none'; box.innerHTML = ''; }
+      openModal('device-modal');
+    }
+
+    function openEditDeviceModal(id) {
+      const d = devices.find(x => x.id === id);
+      if (!d) return;
+      document.getElementById('edit-device-id').value = id;
+      document.getElementById('modal-device-title').innerText = 'Editar Dispositivo';
+      setDeviceMode(d.mode || 'dynamic');
+      document.getElementById('dev-room').value = d.room || d.location || '';
+      document.getElementById('dev-name').value = d.name;
+      document.getElementById('dev-ip').value = d.ip;
+      document.getElementById('dev-hostname').value = d.hostname || '';
+      document.getElementById('dev-model').value = d.model || '';
+      document.getElementById('dev-mac').value = d.mac || '';
+      document.getElementById('dev-location').value = d.location || '';
+      const box = document.getElementById('detect-status-box');
+      if (box) { box.style.display = 'none'; box.innerHTML = ''; }
+      openModal('device-modal');
+    }
+
+    async function saveDevice() {
+      const id = document.getElementById('edit-device-id').value;
+      const room = document.getElementById('dev-room').value.trim() || 'Dispositivos Gerais';
+      const name = document.getElementById('dev-name').value.trim();
+      const ip = document.getElementById('dev-ip').value.trim();
+      const hostname = document.getElementById('dev-hostname').value.trim();
+      const mode = document.getElementById('dev-mode').value || 'dynamic';
+      const model = document.getElementById('dev-model').value.trim();
+      const mac = document.getElementById('dev-mac').value.trim();
+      const location = document.getElementById('dev-location').value.trim();
+
+      if (!name || !ip) {
+        alert("Preencha o Nome e o IP.");
+        return;
+      }
+
+      const method = id ? 'PUT' : 'POST';
+      const url = id ? `/api/devices/${id}` : '/api/devices';
+
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, ip, hostname, mode, room, location, mac, model })
+      });
+
+      const json = await res.json();
+      if (!res.ok) {
+        alert(json.error || "Erro ao salvar.");
+        return;
+      }
+
+      closeModal('device-modal');
+      fetchDevices();
+    }
+
+    async function deleteDevice(id) {
+      if (!confirm("Tem certeza que deseja remover este dispositivo do monitoramento?")) return;
+      await fetch(`/api/devices/${id}`, { method: 'DELETE' });
+      fetchDevices();
+    }
+
+    async function autoLocateDevice(id, name) {
+      if (!confirm(`Deseja rastrear o equipamento "${name}" na rede pelo MAC Address para atualizar o IP caso tenha mudado via DHCP?`)) return;
+
+      const btn = event.currentTarget || event.target;
+      const oldText = btn.innerHTML;
+      btn.innerText = "Buscando...";
+      btn.disabled = true;
+
+      try {
+        const res = await fetch(`/api/devices/${id}/locate`, { method: 'POST' });
+        const data = await res.json();
+        if (res.ok) {
+          alert(`✅ ${data.message}\nDispositivo: ${name}\nIP Anterior: ${data.old_ip}\nNovo IP: ${data.new_ip}\nLatência: ${data.latency}ms`);
+          fetchDevices();
+        } else {
+          alert(`⚠️ ${data.message || data.error || 'Dispositivo não encontrado na sub-rede.'}`);
+        }
+      } catch (err) {
+        alert("Erro ao localizar equipamento: " + err.message);
+      } finally {
+        btn.innerHTML = oldText;
+        btn.disabled = false;
+      }
+    }
+
+    // --- CONFIGURAÇÕES & E-MAIL ---
+    async function fetchSettings() {
+      try {
+        const res = await fetch('/api/settings');
+        const s = await res.json();
+
+        pollInterval = parseInt(s.ping_interval) || 15;
+        countdown = pollInterval;
+
+        const selTop = document.getElementById('interval-select');
+        if (selTop) {
+          if (!Array.from(selTop.options).some(o => o.value === String(pollInterval))) {
+            const opt = document.createElement('option');
+            opt.value = String(pollInterval);
+            opt.innerText = formatCountdown(pollInterval);
+            selTop.appendChild(opt);
+          }
+          selTop.value = String(pollInterval);
+        }
+
+        const selCfg = document.getElementById('cfg-interval');
+        if (selCfg) {
+          if (!Array.from(selCfg.options).some(o => o.value === String(pollInterval))) {
+            const opt = document.createElement('option');
+            opt.value = String(pollInterval);
+            opt.innerText = `${formatCountdown(pollInterval)} (${pollInterval}s)`;
+            selCfg.appendChild(opt);
+          }
+          selCfg.value = String(pollInterval);
+        }
+
+        const badge = document.getElementById('countdown-text');
+        if (badge) badge.innerText = `Atualizando em: ${formatCountdown(countdown)}`;
+
+        document.getElementById('cfg-email-enabled').checked = s.email_enabled === '1';
+        document.getElementById('cfg-smtp-host').value = s.smtp_host || '';
+        document.getElementById('cfg-smtp-port').value = s.smtp_port || '587';
+        document.getElementById('cfg-smtp-tls').checked = s.smtp_tls !== '0';
+        document.getElementById('cfg-smtp-user').value = s.smtp_user || '';
+        if (document.getElementById('cfg-smtp-from')) {
+          document.getElementById('cfg-smtp-from').value = s.smtp_from || '';
+        }
+        document.getElementById('cfg-smtp-pass').value = s.smtp_password || '';
+        document.getElementById('cfg-smtp-to').value = s.smtp_to || '';
+        document.getElementById('cfg-alert-offline').checked = s.alert_offline !== '0';
+        document.getElementById('cfg-alert-recovery').checked = s.alert_recovery !== '0';
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function applySmtpPreset(provider) {
+      const hostEl = document.getElementById('cfg-smtp-host');
+      const portEl = document.getElementById('cfg-smtp-port');
+      const tlsEl = document.getElementById('cfg-smtp-tls');
+      const userEl = document.getElementById('cfg-smtp-user');
+      const passEl = document.getElementById('cfg-smtp-pass');
+
+      if (provider === 'office365') {
+        hostEl.value = 'smtp.office365.com';
+        portEl.value = '587';
+        tlsEl.checked = true;
+        userEl.placeholder = 'seu-email@empresa.com';
+        passEl.placeholder = 'Senha do e-mail ou App Password';
+      } else if (provider === 'gmail') {
+        hostEl.value = 'smtp.gmail.com';
+        portEl.value = '587';
+        tlsEl.checked = true;
+        userEl.placeholder = 'seu-email@gmail.com';
+        passEl.placeholder = 'Senha de App de 16 letras (Google)';
+      } else if (provider === 'outlook') {
+        hostEl.value = 'smtp-mail.outlook.com';
+        portEl.value = '587';
+        tlsEl.checked = true;
+        userEl.placeholder = 'seu-email@outlook.com';
+        passEl.placeholder = 'Senha da conta Microsoft';
+      }
+    }
+
+    function openSettingsModal() {
+      const fb = document.getElementById('email-test-feedback');
+      if (fb) {
+        fb.style.display = 'none';
+        fb.innerHTML = '';
+      }
+      fetchSettings();
+      openModal('settings-modal');
+    }
+
+    async function saveSettings() {
+      const payload = {
+        ping_interval: document.getElementById('cfg-interval').value,
+        email_enabled: document.getElementById('cfg-email-enabled').checked ? '1' : '0',
+        smtp_host: document.getElementById('cfg-smtp-host').value.trim(),
+        smtp_port: document.getElementById('cfg-smtp-port').value.trim(),
+        smtp_tls: document.getElementById('cfg-smtp-tls').checked ? '1' : '0',
+        smtp_user: document.getElementById('cfg-smtp-user').value.trim(),
+        smtp_from: document.getElementById('cfg-smtp-from') ? document.getElementById('cfg-smtp-from').value.trim() : '',
+        smtp_password: document.getElementById('cfg-smtp-pass').value,
+        smtp_to: document.getElementById('cfg-smtp-to').value.trim(),
+        alert_offline: document.getElementById('cfg-alert-offline').checked ? '1' : '0',
+        alert_recovery: document.getElementById('cfg-alert-recovery').checked ? '1' : '0'
+      };
+
+      try {
+        const res = await fetch('/api/settings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        if (res.ok) {
+          alert("Configurações salvas com sucesso!");
+          closeModal('settings-modal');
+          fetchSettings();
+        } else {
+          alert("Erro ao salvar configurações.");
+        }
+      } catch (err) {
+        alert("Erro na requisição: " + err.message);
+      }
+    }
+
+    async function testEmailConfig() {
+      const host = document.getElementById('cfg-smtp-host').value.trim();
+      const port = document.getElementById('cfg-smtp-port').value.trim();
+      const user = document.getElementById('cfg-smtp-user').value.trim();
+      const pass = document.getElementById('cfg-smtp-pass').value;
+      const from = document.getElementById('cfg-smtp-from') ? document.getElementById('cfg-smtp-from').value.trim() : '';
+      const to = document.getElementById('cfg-smtp-to').value.trim();
+      const testTarget = document.getElementById('cfg-test-email-target') ? document.getElementById('cfg-test-email-target').value.trim() : '';
+      const tls = document.getElementById('cfg-smtp-tls').checked ? '1' : '0';
+
+      const feedback = document.getElementById('email-test-feedback');
+      const btn = document.getElementById('btn-test-email');
+      const btnIcon = document.getElementById('btn-test-email-icon');
+      const btnText = document.getElementById('btn-test-email-text');
+
+      // Validação prévia
+      if (!host) {
+        feedback.style.display = 'block';
+        feedback.style.background = 'rgba(239, 68, 68, 0.12)';
+        feedback.style.border = '1px solid rgba(239, 68, 68, 0.4)';
+        feedback.style.color = '#f87171';
+        feedback.style.padding = '10px 14px';
+        feedback.innerHTML = '<b>⚠️ Atenção:</b> Por favor, informe o <b>Servidor SMTP</b> antes de testar.';
+        document.getElementById('cfg-smtp-host').focus();
+        return;
+      }
+
+      if (!testTarget && !to) {
+        feedback.style.display = 'block';
+        feedback.style.background = 'rgba(239, 68, 68, 0.12)';
+        feedback.style.border = '1px solid rgba(239, 68, 68, 0.4)';
+        feedback.style.color = '#f87171';
+        feedback.style.padding = '10px 14px';
+        feedback.innerHTML = '<b>⚠️ Atenção:</b> Informe um <b>Destinatário do Teste</b> ou preencha a lista de destinatários acima.';
+        if (document.getElementById('cfg-test-email-target')) {
+          document.getElementById('cfg-test-email-target').focus();
+        }
+        return;
+      }
+
+      // Estado de envio
+      if (btn) btn.disabled = true;
+      if (btnIcon) btnIcon.innerText = '⏳';
+      if (btnText) btnText.innerText = 'Conectando e Enviando...';
+
+      feedback.style.display = 'block';
+      feedback.style.background = 'rgba(59, 130, 246, 0.12)';
+      feedback.style.border = '1px solid rgba(59, 130, 246, 0.35)';
+      feedback.style.color = '#93c5fd';
+      feedback.style.padding = '12px 14px';
+      feedback.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="display: inline-block; animation: spin 1s linear infinite; font-size: 16px;">🔄</span>
+          <span>Conectando ao servidor SMTP <b>${host}:${port}</b> e autenticando... Aguarde.</span>
+        </div>
+      `;
+
+      const payload = {
+        smtp_host: host,
+        smtp_port: port,
+        smtp_tls: tls,
+        smtp_user: user,
+        smtp_password: pass,
+        smtp_from: from,
+        smtp_to: to,
+        test_recipient: testTarget
+      };
+
+      try {
+        const res = await fetch('/api/settings/test-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        let data = {};
+        try {
+          data = await res.json();
+        } catch (e) {
+          data = { error: `Resposta inesperada do servidor (Código HTTP ${res.status}).` };
+        }
+
+        if (res.ok && data.success) {
+          const sentTo = data.recipients ? data.recipients.join(', ') : testTarget || to;
+          feedback.style.background = 'rgba(16, 185, 129, 0.12)';
+          feedback.style.border = '1px solid rgba(16, 185, 129, 0.4)';
+          feedback.style.color = '#34d399';
+          feedback.style.padding = '12px 16px';
+          feedback.innerHTML = `
+            <div style="display: flex; align-items: flex-start; gap: 10px;">
+              <span style="font-size: 18px; line-height: 1;">✅</span>
+              <div>
+                <div style="font-weight: 700; color: #10b981; font-size: 13px; margin-bottom: 3px;">E-mail de Teste Enviado com Sucesso!</div>
+                <div style="color: #cbd5e1; font-size: 12px; margin-bottom: 6px;">
+                  As configurações e credenciais SMTP estão 100% corretas. O e-mail de teste foi enviado para: <b style="color: #60a5fa;">${sentTo}</b>.
+                </div>
+                <div style="color: #94a3b8; font-size: 11px;">
+                  💡 Verifique a caixa de entrada (e pasta de spam) desta conta. Clique em <b>"Salvar Configurações"</b> se desejar manter essas configurações salvas.
+                </div>
+              </div>
+            </div>
+          `;
+        } else {
+          const errMsg = data.error || 'Erro desconhecido ao tentar comunicar com o servidor SMTP.';
+          feedback.style.background = 'rgba(239, 68, 68, 0.12)';
+          feedback.style.border = '1px solid rgba(239, 68, 68, 0.4)';
+          feedback.style.color = '#f87171';
+          feedback.style.padding = '12px 16px';
+          feedback.innerHTML = `
+            <div style="display: flex; align-items: flex-start; gap: 10px;">
+              <span style="font-size: 18px; line-height: 1;">❌</span>
+              <div>
+                <div style="font-weight: 700; color: #ef4444; font-size: 13px; margin-bottom: 4px;">Falha no Teste de Configuração</div>
+                <div style="color: #fca5a5; font-size: 12px; line-height: 1.4;">${errMsg}</div>
+              </div>
+            </div>
+          `;
+        }
+      } catch (err) {
+        feedback.style.background = 'rgba(239, 68, 68, 0.12)';
+        feedback.style.border = '1px solid rgba(239, 68, 68, 0.4)';
+        feedback.style.color = '#f87171';
+        feedback.style.padding = '12px 16px';
+        feedback.innerHTML = `
+          <div style="display: flex; align-items: flex-start; gap: 10px;">
+            <span style="font-size: 18px; line-height: 1;">❌</span>
+            <div>
+              <div style="font-weight: 700; color: #ef4444; font-size: 13px; margin-bottom: 4px;">Falha de Comunicação com o Servidor Local</div>
+              <div style="color: #fca5a5; font-size: 12px; margin-bottom: 4px;">Não foi possível contactar o Monitor NOC local (porta 5000): ${err.message}</div>
+              <div style="color: #94a3b8; font-size: 11px;">💡 Verifique se o executável <b>MonitorNOC.exe</b> está aberto e em execução no Windows.</div>
+            </div>
+          </div>
+        `;
+      } finally {
+        if (btn) btn.disabled = false;
+        if (btnIcon) btnIcon.innerText = '📨';
+        if (btnText) btnText.innerText = 'Enviar E-mail de Teste';
+      }
+    }
+
+    // --- ALERTA SONORO ---
+    function playAlertSound() {
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(300, audioCtx.currentTime + 0.4);
+
+        gain.gain.setValueAtTime(0.4, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.4);
+      } catch (e) {
+        console.warn(e);
+      }
+    }
+
+    // --- FILTROS & MODAIS ---
+    function setFilter(type, btn) {
+      currentFilter = type;
+      document.querySelectorAll('.filter-tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderApp();
+    }
+
+    function openModal(id) { document.getElementById(id).style.display = 'flex'; }
+    function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    // --- TOOLTIP DE AJUDA DO GMAIL ---
+    function toggleGmailHelp(event, btnEl) {
+      if (event) {
+        event.stopPropagation();
+        event.preventDefault();
+      }
+      const wrapper = btnEl ? btnEl.closest('.help-tooltip-wrapper') : null;
+      if (!wrapper) return;
+
+      const wasActive = wrapper.classList.contains('active');
+      document.querySelectorAll('.help-tooltip-wrapper.active').forEach(w => w.classList.remove('active'));
+
+      if (!wasActive) {
+        wrapper.classList.add('active');
+      }
+    }
+
+    // Fecha o tooltip ao clicar em qualquer lugar fora ou ao pressionar Escape
+    document.addEventListener('click', (e) => {
+      if (!e.target.closest('.help-tooltip-wrapper')) {
+        document.querySelectorAll('.help-tooltip-wrapper.active').forEach(w => w.classList.remove('active'));
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        document.querySelectorAll('.help-tooltip-wrapper.active').forEach(w => w.classList.remove('active'));
+      }
+    });
+  </script>
+</body>
+</html>

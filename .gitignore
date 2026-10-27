@@ -1,0 +1,15 @@
+# Byte-compiled / optimized files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# PyInstaller build artifacts (arquivos temporários intermediários)
+build/
+*.spec.bak
+
+# Logs temporários
+*.log
+run.log
+
+# Pasta local de backup/arquivamento
+releases/
