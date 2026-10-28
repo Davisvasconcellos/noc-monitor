@@ -14,9 +14,10 @@ import struct
 import ctypes
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from email.mime.image import MIMEImage
 from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, send_file
 
 # Configura codificação segura do console para evitar UnicodeEncodeError em Windows (cp1252)
 if sys.stdout and hasattr(sys.stdout, 'reconfigure'):
@@ -46,6 +47,19 @@ def get_app_dir():
 
 APP_DIR = get_app_dir()
 DB_PATH = os.path.join(APP_DIR, 'monitor.db')
+
+def get_logo_path():
+    """Retorna o caminho absoluto do arquivo logo.png caso exista na raiz ou no bundle PyInstaller."""
+    base_dirs = [
+        APP_DIR,
+        getattr(sys, '_MEIPASS', APP_DIR),
+        os.getcwd()
+    ]
+    for bdir in base_dirs:
+        lp = os.path.join(bdir, 'logo.png')
+        if os.path.exists(lp):
+            return lp
+    return None
 
 # Inicializa Flask apontando para pasta templates
 template_folder = os.path.join(getattr(sys, '_MEIPASS', APP_DIR), 'templates')
@@ -195,6 +209,32 @@ def ping_ip(ip, timeout_ms=1000):
     except Exception:
         return False, 0.0, None
 
+def get_email_signature_html(context_text="Notificação gerada automaticamente pelo sistema de monitoramento"):
+    """Gera o rodapé HTML com assinatura institucional e logo embutido via CID."""
+    has_logo = get_logo_path() is not None
+    logo_td = ""
+    if has_logo:
+        logo_td = """
+        <td style="vertical-align: middle; width: 130px; padding-right: 14px;">
+            <div style="background: #ffffff; padding: 4px 8px; border-radius: 6px; display: inline-block;">
+                <img src="cid:company_logo" alt="Logo" height="34" style="height: 34px; max-width: 120px; display: block; border: 0; outline: none;" />
+            </div>
+        </td>
+        """
+    return f"""
+    <div style="border-top: 1px solid #1e293b; padding-top: 16px; margin-top: 24px;">
+        <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="width: 100%; border-collapse: collapse;">
+            <tr>
+                {logo_td}
+                <td style="vertical-align: middle; font-size: 11px; color: #64748b; line-height: 1.5;">
+                    <strong style="color: #cbd5e1; font-size: 12px; letter-spacing: 0.3px;">Monitor</strong> &mdash; Videoconferência &amp; Infraestrutura<br>
+                    <span>{context_text}</span>
+                </td>
+            </tr>
+        </table>
+    </div>
+    """
+
 # --- DISPARO DE E-MAIL (SMTP) ---
 def dispatch_smtp(cfg, subject, html_content, custom_recipients=None):
     """
@@ -225,11 +265,26 @@ def dispatch_smtp(cfg, subject, html_content, custom_recipients=None):
         return False, "Nenhum endereço de destinatário válido informado para envio."
 
     try:
-        msg = MIMEMultipart('alternative')
+        msg = MIMEMultipart('related')
         msg['Subject'] = subject
-        msg['From'] = f"Monitor NOC <{smtp_from}>" if smtp_from else "Monitor NOC"
+        msg['From'] = f"Monitor <{smtp_from}>" if smtp_from else "Monitor"
         msg['To'] = ", ".join(recipients)
-        msg.attach(MIMEText(html_content, 'html'))
+
+        msg_alt = MIMEMultipart('alternative')
+        msg_alt.attach(MIMEText(html_content, 'html', 'utf-8'))
+        msg.attach(msg_alt)
+
+        # Anexa o logotipo inline caso o arquivo exista
+        logo_path = get_logo_path()
+        if logo_path and os.path.exists(logo_path):
+            try:
+                with open(logo_path, 'rb') as f_img:
+                    logo_img = MIMEImage(f_img.read(), _subtype='png')
+                    logo_img.add_header('Content-ID', '<company_logo>')
+                    logo_img.add_header('Content-Disposition', 'inline', filename='logo.png')
+                    msg.attach(logo_img)
+            except Exception as e_img:
+                print(f"[!] Erro ao anexar imagem do logo ao e-mail: {e_img}")
 
         # Conexão SMTP com timeout seguro de 12 segundos
         if smtp_port == 465:
@@ -427,16 +482,18 @@ def perform_ping_sweep():
                 if get_setting('alert_offline', '1') == '1':
                     subject = f"🔴 [ALERTA] Dispositivo Offline: {dev['name']} ({dev['ip']})"
                     body = f"""
-                    <div style="font-family: Arial, sans-serif; padding: 20px; background: #0b0f19; color: #f8fafc; border-radius: 8px;">
-                        <h2 style="color: #ef4444; margin-top: 0;">⚠️ Dispositivo Inacessível (OFFLINE)</h2>
-                        <p>O equipamento abaixo parou de responder às solicitações de PING:</p>
+                    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 24px; background: #0b0f19; color: #f8fafc; border-radius: 10px; max-width: 580px; margin: 0 auto; border: 1px solid #1e293b;">
+                        <div style="border-bottom: 1px solid #1e293b; padding-bottom: 14px; margin-bottom: 16px;">
+                            <h2 style="color: #ef4444; margin: 0; font-size: 20px;">⚠️ Dispositivo Inacessível (OFFLINE)</h2>
+                            <div style="font-size: 13px; color: #94a3b8; margin-top: 4px;">O equipamento abaixo parou de responder às solicitações de PING.</div>
+                        </div>
                         <table style="width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px;">
                             <tr><td style="padding: 8px; border-bottom: 1px solid #1e293b; color: #94a3b8;"><b>Nome da Sala:</b></td><td style="padding: 8px; border-bottom: 1px solid #1e293b; color: #fff;">{dev['name']}</td></tr>
                             <tr><td style="padding: 8px; border-bottom: 1px solid #1e293b; color: #94a3b8;"><b>Endereço IP:</b></td><td style="padding: 8px; border-bottom: 1px solid #1e293b; color: #fff;">{dev['ip']}</td></tr>
                             <tr><td style="padding: 8px; border-bottom: 1px solid #1e293b; color: #94a3b8;"><b>Localização:</b></td><td style="padding: 8px; border-bottom: 1px solid #1e293b; color: #fff;">{dev['location'] or 'Não informada'}</td></tr>
                             <tr><td style="padding: 8px; border-bottom: 1px solid #1e293b; color: #94a3b8;"><b>Horário da Queda:</b></td><td style="padding: 8px; border-bottom: 1px solid #1e293b; color: #ef4444;"><b>{now_str}</b></td></tr>
                         </table>
-                        <p style="margin-top: 20px; font-size: 12px; color: #64748b;">Notificação gerada automaticamente pelo Monitor NOC.</p>
+                        {get_email_signature_html("Alerta de Incidente emitido em tempo real pelo Monitor")}
                     </div>
                     """
                     email_alerts.append((subject, body))
@@ -445,15 +502,18 @@ def perform_ping_sweep():
                 if get_setting('alert_recovery', '1') == '1':
                     subject = f"🟢 [RECUPERADO] Dispositivo Online: {dev['name']} ({dev['ip']})"
                     body = f"""
-                    <div style="font-family: Arial, sans-serif; padding: 20px; background: #0b0f19; color: #f8fafc; border-radius: 8px;">
-                        <h2 style="color: #10b981; margin-top: 0;">✅ Comunicação Restaurada (ONLINE)</h2>
-                        <p>O equipamento voltou a responder normalmente:</p>
+                    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; padding: 24px; background: #0b0f19; color: #f8fafc; border-radius: 10px; max-width: 580px; margin: 0 auto; border: 1px solid #1e293b;">
+                        <div style="border-bottom: 1px solid #1e293b; padding-bottom: 14px; margin-bottom: 16px;">
+                            <h2 style="color: #10b981; margin: 0; font-size: 20px;">✅ Comunicação Restaurada (ONLINE)</h2>
+                            <div style="font-size: 13px; color: #94a3b8; margin-top: 4px;">O equipamento voltou a responder normalmente na rede.</div>
+                        </div>
                         <table style="width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px;">
                             <tr><td style="padding: 8px; border-bottom: 1px solid #1e293b; color: #94a3b8;"><b>Nome da Sala:</b></td><td style="padding: 8px; border-bottom: 1px solid #1e293b; color: #fff;">{dev['name']}</td></tr>
                             <tr><td style="padding: 8px; border-bottom: 1px solid #1e293b; color: #94a3b8;"><b>Endereço IP:</b></td><td style="padding: 8px; border-bottom: 1px solid #1e293b; color: #fff;">{dev['ip']}</td></tr>
                             <tr><td style="padding: 8px; border-bottom: 1px solid #1e293b; color: #94a3b8;"><b>Latência Atual:</b></td><td style="padding: 8px; border-bottom: 1px solid #1e293b; color: #10b981;"><b>{latency} ms</b></td></tr>
                             <tr><td style="padding: 8px; border-bottom: 1px solid #1e293b; color: #94a3b8;"><b>Horário de Retorno:</b></td><td style="padding: 8px; border-bottom: 1px solid #1e293b; color: #fff;">{now_str}</td></tr>
                         </table>
+                        {get_email_signature_html("Notificação de recuperação de serviço emitida pelo Monitor")}
                     </div>
                     """
                     email_alerts.append((subject, body))
@@ -513,6 +573,29 @@ def monitoring_loop():
 @app.route('/')
 def index():
     return render_template('index.html')
+
+@app.route('/logo.png')
+def serve_logo():
+    """Serve o arquivo logo.png da raiz do aplicativo."""
+    logo_path = get_logo_path()
+    if logo_path and os.path.exists(logo_path):
+        return send_file(logo_path, mimetype='image/png', max_age=0)
+    return ('', 404)
+
+@app.route('/icon.ico')
+@app.route('/favicon.ico')
+def serve_icon():
+    """Serve o ícone icon.ico da raiz do aplicativo."""
+    base_dirs = [
+        APP_DIR,
+        getattr(sys, '_MEIPASS', APP_DIR),
+        os.getcwd()
+    ]
+    for bdir in base_dirs:
+        ico_path = os.path.join(bdir, 'icon.ico')
+        if os.path.exists(ico_path):
+            return send_file(ico_path, mimetype='image/x-icon', max_age=3600)
+    return ('', 404)
 
 @app.route('/api/devices', methods=['GET'])
 def get_devices():
@@ -1191,11 +1274,11 @@ def test_email():
     use_tls_text = "Ativado (STARTTLS)" if str(cfg.get('smtp_tls', '1')) == '1' else "Desativado"
     now_str = datetime.now().strftime('%d/%m/%Y às %H:%M:%S')
 
-    subject = "🔔 [TESTE DE SUCESSO] Monitor NOC - Videoconferência & Infra"
+    subject = "🔔 [TESTE DE SUCESSO] Monitor - Videoconferência & Infra"
     body = f"""
     <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #0b0f19; padding: 28px; color: #f8fafc; border-radius: 12px; max-width: 580px; margin: 0 auto; border: 1px solid #1e293b;">
         <div style="border-bottom: 1px solid #1e293b; padding-bottom: 16px; margin-bottom: 18px;">
-            <div style="display: inline-block; background: #2563eb; color: #fff; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 6px; letter-spacing: 0.5px; margin-bottom: 8px;">NOC MONITOR</div>
+            <div style="display: inline-block; background: #2563eb; color: #fff; font-size: 11px; font-weight: 800; padding: 4px 10px; border-radius: 6px; letter-spacing: 0.5px; margin-bottom: 8px;">MONITOR</div>
             <h2 style="color: #60a5fa; margin: 0; font-size: 20px;">✅ Teste de Configuração de E-mail</h2>
         </div>
         
@@ -1217,9 +1300,7 @@ def test_email():
             A partir de agora, ao ativar a opção <b>"Ativar Notificações por E-mail"</b>, os alertas serão disparados automaticamente para sua equipe quando qualquer sala ou equipamento de videoconferência sofrer queda.
         </p>
         
-        <div style="border-top: 1px solid #1e293b; padding-top: 14px; font-size: 11px; color: #64748b; text-align: center;">
-            Monitor NOC - Videoconferência & Infraestrutura | Disparo automático de teste
-        </div>
+        {get_email_signature_html("Disparo de validação emitido com sucesso pelo Monitor")}
     </div>
     """
 
@@ -1279,13 +1360,13 @@ def setup_system_tray():
     )
 
     image = get_tray_image()
-    tray_icon = pystray.Icon("MonitorNOC", image, "Monitor NOC - Videoconferência", menu)
+    tray_icon = pystray.Icon("Monitor", image, "Monitor - Videoconferência", menu)
 
     # Notificação inicial amigável
     def notify_start():
         time.sleep(2.0)
         try:
-            tray_icon.notify("O monitor está ativo e rodando na bandeja do relógio.", "Monitor NOC Iniciado")
+            tray_icon.notify("O monitor está ativo e rodando na bandeja do relógio.", "Monitor Iniciado")
         except Exception:
             pass
 
@@ -1312,7 +1393,7 @@ if __name__ == '__main__':
     threading.Thread(target=open_browser, daemon=True).start()
 
     print("=" * 60)
-    print(" [*] MONITOR NOC - VIDEOCONFERENCIA & EQUIPAMENTOS INICIADO")
+    print(" [*] MONITOR - VIDEOCONFERENCIA & EQUIPAMENTOS INICIADO")
     print(" Painel Web: http://127.0.0.1:5000")
     print("=" * 60)
 

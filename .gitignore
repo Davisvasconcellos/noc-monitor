@@ -13,3 +13,7 @@ run.log
 
 # Pasta local de backup/arquivamento
 releases/
+
+# Arquivos zip de release/distribuição
+*.zip
+dist/*.zip

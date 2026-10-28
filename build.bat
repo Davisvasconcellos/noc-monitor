@@ -6,9 +6,10 @@ echo.
 
 if exist build rmdir /s /q build 2>nul
 
-python -m PyInstaller --noconfirm --onefile --noconsole --icon="icon.ico" --add-data "templates;templates" --add-data "icon.ico;." --hidden-import "pystray._win32" --name "MonitorNOC" app.py
+python -m PyInstaller --noconfirm --onefile --noconsole --icon="icon.ico" --add-data "templates;templates" --add-data "icon.ico;." --add-data "logo.png;." --hidden-import "pystray._win32" --name "MonitorNOC" app.py
 
 if exist LICENSE.txt copy /y LICENSE.txt dist\ >nul
+if exist logo.png copy /y logo.png dist\ >nul
 
 echo.
 echo ========================================================

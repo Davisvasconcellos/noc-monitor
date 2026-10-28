@@ -5,7 +5,7 @@ a = Analysis(
     ['app.py'],
     pathex=[],
     binaries=[],
-    datas=[('templates', 'templates'), ('icon.ico', '.')],
+    datas=[('templates', 'templates'), ('icon.ico', '.'), ('logo.png', '.')],
     hiddenimports=['pystray._win32'],
     hookspath=[],
     hooksconfig={},
